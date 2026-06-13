@@ -208,6 +208,20 @@
         </div>
     </nav>
 
+    <!-- Mobile Side Menu (hidden on md+) -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
+    <aside id="mobile-menu" class="fixed inset-y-0 left-0 w-64 bg-bgCard p-6 transform -translate-x-full transition-transform duration-300 z-50 md:hidden" aria-hidden="true">
+        <div class="flex items-center justify-between mb-6">
+            <a href="#" class="font-cinzel text-accentGold font-bold text-xl">SUPLÍCIO</a>
+            <button id="mobile-menu-close" class="text-textMain hover:text-white focus:outline-none">✕</button>
+        </div>
+        <nav class="flex flex-col gap-4 text-textMain">
+            <a href="#recursos" class="py-2 px-3 rounded hover:bg-bgCardHover transition-colors" onclick="closeMobileMenu()">RECURSOS</a>
+            <a href="#cartas" class="py-2 px-3 rounded hover:bg-bgCardHover transition-colors" onclick="closeMobileMenu()">CARTAS</a>
+            <a href="#fases" class="py-2 px-3 rounded hover:bg-bgCardHover transition-colors" onclick="closeMobileMenu()">O TURNO</a>
+            <a href="#regras" class="py-2 px-3 rounded hover:bg-bgCardHover transition-colors" onclick="closeMobileMenu()">REGRAS EXTRAS</a>
+        </nav>
+    </aside>
     <main class="pt-28 pb-24 overflow-hidden">
         
         <header class="max-w-4xl mx-auto px-4 text-center py-20 relative reveal">
@@ -753,12 +767,47 @@
 
         /**
          * [ MENU MOBILE ]
+         * Implementa um menu lateral para telas móveis e gerencia overlay/fechamento.
          */
         const mobileBtn = document.getElementById('mobile-menu-btn');
-        const nav = document.getElementById('navbar');
-        // Simple logic: on mobile, you might want to expand a menu. 
-        // For this single page design, relying on native scroll is usually fine, 
-        // but we add the button visually for completeness.
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        const mobileClose = document.getElementById('mobile-menu-close');
+
+        function openMobileMenu() {
+            if (!mobileMenu) return;
+            mobileMenu.classList.remove('-translate-x-full');
+            mobileMenu.classList.add('translate-x-0');
+            if (mobileOverlay) mobileOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            mobileMenu.setAttribute('aria-hidden', 'false');
+            if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeMobileMenu() {
+            if (!mobileMenu) return;
+            mobileMenu.classList.add('-translate-x-full');
+            mobileMenu.classList.remove('translate-x-0');
+            if (mobileOverlay) mobileOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+            mobileMenu.setAttribute('aria-hidden', 'true');
+            if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'false');
+        }
+
+        if (mobileBtn) {
+            mobileBtn.addEventListener('click', () => {
+                if (mobileMenu && mobileMenu.classList.contains('-translate-x-full')) openMobileMenu();
+                else closeMobileMenu();
+            });
+        }
+
+        if (mobileClose) mobileClose.addEventListener('click', closeMobileMenu);
+        if (mobileOverlay) mobileOverlay.addEventListener('click', closeMobileMenu);
+
+        // Fecha o menu móvel ao pressionar ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenu && !mobileMenu.classList.contains('-translate-x-full')) closeMobileMenu();
+        });
 
 
         /**
