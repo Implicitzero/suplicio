@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suplício: O Grimório de Regras</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        /* Paleta Melhorada com Alto Contraste */
+                        bgBase: '#0b0c10',     /* Fundo principal mais profundo */
+                        bgCard: '#1f2833',     /* Fundo de cards contrastante */
+                        bgCardAlt: '#162028',  /* Fundo alternativo para seções escuras */
+                        bgCardDark: '#141820', /* Fundo escuro consistente para destaques */
+                        bgCardHover: '#2b3745',
+                        textMain: '#c5c6c7',   /* Texto base com ótima legibilidade */
+                        textBright: '#ffffff', /* Texto em destaque */
+                        textMuted: '#a6a9ac',  /* Texto secundário legível */
+                        
+                        /* Cores Temáticas Arcana */
+                        accentGold: '#f4a261',
+                        accentGoldGlow: 'rgba(244, 162, 97, 0.4)',
+                        accentBlood: '#e63946',
+                        accentBloodGlow: 'rgba(230, 57, 70, 0.4)',
+                        accentSoul: '#45a29e',
+                        accentSoulGlow: 'rgba(69, 162, 158, 0.4)',
+                        
+                        borderDim: '#3a4a5a'
+                    },
+                    fontFamily: {
+                        cinzel: ['"Cinzel Decorative"', 'serif'],
+                        body: ['"Lora"', 'serif'], /* Lora é excelente para leitura longa */
+                    },
+                    boxShadow: {
+                        'glow-gold': '0 0 20px theme("colors.accentGoldGlow")',
+                        'glow-blood': '0 0 20px theme("colors.accentBloodGlow")',
+                        'glow-soul': '0 0 20px theme("colors.accentSoulGlow")',
+                        'card': '0 10px 30px -10px rgba(0,0,0,0.8)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-base: #0b0c10;
+            --bg-card: #1f2833;
+            --bg-card-alt: #162028;
+            --bg-card-dark: #141820;
+            --bg-card-hover: #2b3745;
+            --text-main: #c5c6c7;
+            --text-bright: #ffffff;
+            --text-muted: #a6a9ac;
+            --accent-gold: #f4a261;
+            --accent-gold-glow: rgba(244, 162, 97, 0.4);
+            --accent-blood: #e63946;
+            --accent-blood-glow: rgba(230, 57, 70, 0.4);
+            --accent-soul: #45a29e;
+            --accent-soul-glow: rgba(69, 162, 158, 0.4);
+            --border-dim: #3a4a5a;
+        }
+
+        /* Base Styles */
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Canvas Background */
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Dark background default text contrast */
+        .bg-bgBase,
+        .bg-bgCard,
+        .bg-bgCardAlt,
+        .bg-bgCardDark,
+        .bg-bgBase\/80,
+        .bg-bgCard\/80,
+        .bg-black\/50,
+        .bg-\[\#2a0808\] {
+            color: var(--text-bright);
+        }
+
+        /* Light translucent backgrounds use darker text */
+        .bg-accentGold\/10,
+        .bg-white\/5,
+        .bg-accentBlood\/10,
+        .bg-bgCardHover {
+            color: var(--text-main);
+        }
+
+        /* Ensure Tailwind custom text utilities resolve to the correct CSS vars */
+        .text-textMain { color: var(--text-main) !important; }
+        .text-textBright { color: var(--text-bright) !important; }
+
+        /* Interactive Terms Styling - Melhor Contraste */
+        .term {
+            color: var(--accent-gold);
+            font-weight: 600;
+            border-bottom: 1px dashed var(--accent-gold);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0 2px;
+        }
+        
+        .term:hover {
+            color: var(--text-bright);
+            background-color: var(--accent-blood);
+            border-bottom-color: transparent;
+            border-radius: 2px;
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+
+        /* Scroll Animations (Intersection Observer) */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-dim);
+            border-radius: 5px; 
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
+
+        /* Maintain high contrast on dark backgrounds */
+        .bg-bgBase,
+        .bg-bgCard,
+        .bg-bgCardAlt,
+        .bg-bgCardDark,
+        .bg-bgBase\/80,
+        .bg-bgCard\/80,
+        .bg-black\/50 {
+            color: var(--text-bright);
+        }
+
+        /* Timeline Styles */
+        .timeline-line {
+            position: absolute;
+            left: 23px; /* Center of the icon */
+            top: 40px;
+            bottom: -40px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-gold) 0%, var(--border-dim) 100%);
+            z-index: 0;
+        }
+        
+        /* Tab Transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="font-body text-lg antialiased selection:bg-accentBlood selection:text-white">
+
+    <!-- Fundo Interativo -->
+    <canvas id="particle-canvas"></canvas>
+
+    <nav class="fixed top-0 w-full bg-bgBase/80 backdrop-blur-md border-b border-borderDim z-40 transition-all duration-300" id="navbar">
+        <div class="max-w-6xl mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">
+            <a href="#" class="font-cinzel text-accentGold font-bold text-2xl tracking-widest flex items-center gap-2 group">
+                <span class="text-accentBlood group-hover:text-accentGold transition-colors">◈</span> SUPLÍCIO
+            </a>
+            <div class="hidden md:flex gap-8 text-sm font-bold tracking-wider text-textMain">
+                <a href="#recursos" class="hover:text-accentGold transition-colors">RECURSOS</a>
+                <a href="#cartas" class="hover:text-accentGold transition-colors">CARTAS</a>
+                <a href="#fases" class="hover:text-accentGold transition-colors">O TURNO</a>
+                <a href="#regras" class="hover:text-accentGold transition-colors">REGRAS EXTRAS</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden text-textMain hover:text-white" id="mobile-menu-btn">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="pt-28 pb-24 overflow-hidden">
+        
+        <header class="max-w-4xl mx-auto px-4 text-center py-20 relative reveal">
+            <div class="inline-block mb-6 p-4 rounded-full bg-bgCard border border-borderDim shadow-card">
+                <svg class="w-12 h-12 text-accentBlood" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2L2 22h20L12 2zm0 6l6 12H6l6-12z" stroke-linejoin="round"/>
+                    <circle cx="12" cy="15" r="2" fill="currentColor"/>
+                </svg>
+            </div>
+            
+            <h1 class="font-cinzel text-5xl md:text-7xl lg:text-8xl font-black text-textBright mb-6 uppercase tracking-widest drop-shadow-2xl">
+                Suplício
+            </h1>
+            <p class="font-cinzel text-xl md:text-2xl text-accentGold tracking-[0.2em] mb-12">O Grimório de Regras Oficial</p>
+            
+            <div class="bg-bgCard/80 border border-borderDim rounded-2xl p-8 backdrop-blur-sm shadow-card max-w-3xl mx-auto text-left relative overflow-hidden group hover:border-accentGold transition-colors duration-500">
+                <!-- Efeito de brilho de fundo no card -->
+                <div class="absolute -top-20 -right-20 w-40 h-40 bg-accentGold/5 rounded-full blur-3xl group-hover:bg-accentGold/10 transition-all"></div>
+                
+                <h3 class="font-cinzel text-2xl text-textBright mb-4 flex items-center gap-2">
+                    <span class="text-accentBlood">◆</span> O Chamado
+                </h3>
+                <p class="mb-4 text-textMain leading-relaxed">Bem-vindo, Arcanista. Você lidera um culto secreto em busca da dominação mundial através de magia proibida e horrores indescritíveis.</p>
+                <p class="leading-relaxed">Sua missão é solitária e cruel: reduza a <span class="term" data-term="essencia">Essência</span> de seus oponentes a zero antes que façam o mesmo com você. Não há tabuleiro, apenas o seu grimório de exatas 40 cartas e a sua astúcia.</p>
+            </div>
+        </header>
+
+        <section id="recursos" class="max-w-6xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
+            <div class="text-center mb-16">
+                <h2 class="font-cinzel text-4xl text-textBright mb-4">As Forças do Oculto</h2>
+                <div class="h-1 w-24 bg-accentBlood mx-auto rounded-full"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- Card Essência -->
+                <div class="bg-bgCard border border-borderDim rounded-2xl p-8 shadow-card hover:border-white hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-100" onclick="openModal('essencia')">
+                    <div class="w-20 h-20 rounded-full bg-white/5 border border-white/20 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform shadow-glow-gold">
+                        🤍
+                    </div>
+                    <h3 class="font-cinzel font-bold text-2xl text-white mb-2">Essência</h3>
+                    <div class="text-4xl font-black text-textBright mb-4">30 <span class="text-base font-normal text-textMain">Max</span></div>
+                    <p class="text-textBright text-sm flex-grow">Sua força vital. Se chegar a zero, seu culto é banido para sempre e você é eliminado da partida.</p>
+                    <button class="mt-6 text-xs text-white uppercase tracking-wider font-bold border border-white/30 px-4 py-2 rounded-full group-hover:bg-white group-hover:text-bgBase transition-colors">Detalhes</button>
+                </div>
+
+                <!-- Card Alma -->
+                <div class="bg-bgCard border border-borderDim rounded-2xl p-8 shadow-card hover:border-accentSoul hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-200" onclick="openModal('alma')">
+                    <div class="w-20 h-20 rounded-full bg-accentSoul/10 border border-accentSoul/30 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform shadow-glow-soul">
+                        🌌
+                    </div>
+                    <h3 class="font-cinzel font-bold text-2xl text-accentSoul mb-2">Alma</h3>
+                    <div class="flex items-baseline gap-2 mb-4">
+                        <span class="text-4xl font-black text-textBright">6</span>
+                        <span class="text-sm font-normal text-textBright">Inicial</span>
+                        <span class="text-accentSoul font-bold">+4 / turno</span>
+                    </div>
+                    <p class="text-textBright text-sm flex-grow">A mana cósmica usada para conjurar feitiços e invocar abominações. O limite máximo acumulado é 12.</p>
+                    <button class="mt-6 text-xs text-accentSoul uppercase tracking-wider font-bold border border-accentSoul/30 px-4 py-2 rounded-full group-hover:bg-accentSoul group-hover:text-bgBase transition-colors">Detalhes</button>
+                </div>
+
+                <!-- Card Sofrimento -->
+                <div class="bg-bgCard border border-borderDim rounded-2xl p-8 shadow-card hover:border-accentBlood hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-300" onclick="openModal('sofrimento')">
+                    <div class="w-20 h-20 rounded-full bg-accentBlood/10 border border-accentBlood/30 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform shadow-glow-blood">
+                        🩸
+                    </div>
+                    <h3 class="font-cinzel font-bold text-2xl text-accentBlood mb-2">Sofrimento</h3>
+                    <div class="text-4xl font-black text-textBright mb-4">0 <span class="text-base font-normal text-textBright">Marcas</span></div>
+                    <p class="text-textBright text-sm flex-grow">Gerado pela dor (1 marca a cada 3 de dano sofrido). Pode pagar rituais poderosos, mas se ultrapassar 8 marcas, pune seu corpo.</p>
+                    <button class="mt-6 text-xs text-accentBlood uppercase tracking-wider font-bold border border-accentBlood/30 px-4 py-2 rounded-full group-hover:bg-accentBlood group-hover:text-bgBase transition-colors">Detalhes</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="cartas" class="max-w-6xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
+            <div class="text-center mb-12">
+                <h2 class="font-cinzel text-4xl text-textBright mb-4">O Arsenal Arcano</h2>
+                <p class="text-textMain max-w-2xl mx-auto">Seu deck é composto por exatas 40 cartas. Explore os tomos abaixo para conhecer as ferramentas da sua ascensão.</p>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+                <button class="tab-btn active px-6 py-3 font-cinzel font-bold text-sm md:text-base border border-borderDim rounded-t-lg bg-bgCard text-textBright border-b-0 hover:bg-bgCardHover transition-colors" data-target="tab-mestre">Mestre do Culto</button>
+                <button class="tab-btn px-6 py-3 font-cinzel font-bold text-sm md:text-base border border-borderDim rounded-t-lg bg-bgBase text-textMain hover:bg-bgCardHover transition-colors" data-target="tab-criaturas">Criaturas</button>
+                <button class="tab-btn px-6 py-3 font-cinzel font-bold text-sm md:text-base border border-borderDim rounded-t-lg bg-bgBase text-textMain hover:bg-bgCardHover transition-colors" data-target="tab-rituais">Rituais</button>
+                <button class="tab-btn px-6 py-3 font-cinzel font-bold text-sm md:text-base border border-borderDim rounded-t-lg bg-bgBase text-textMain hover:bg-bgCardHover transition-colors" data-target="tab-sortilegios">Sortilégios</button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="bg-bgCard border border-borderDim rounded-b-xl rounded-tr-xl p-6 md:p-10 shadow-card min-h-[400px]">
+                
+                <!-- Tab: Mestre -->
+                <div id="tab-mestre" class="tab-content active">
+                    <div class="grid md:grid-cols-2 gap-10 items-center">
+                        <div>
+                            <h3 class="font-cinzel text-3xl text-accentGold mb-4 flex items-center gap-3">
+                                <span class="bg-accentGold/20 p-2 rounded text-xl">👑</span> O Avatar da Sua Vontade
+                            </h3>
+                            <p class="mb-6 leading-relaxed">Carta obrigatória e líder do seu deck (39 cartas + Mestre = 40). Fica visível fora do deck desde o início e possui 3 habilidades primordiais:</p>
+                            <ul class="space-y-4 mb-6">
+                                <li class="bg-bgBase p-4 rounded border-l-4 border-accentGold shadow-sm">
+                                    <strong class="text-textBright block mb-1 cursor-help term" data-term="passiva">Habilidade Passiva</strong> Funciona o tempo todo, mesmo fora de campo.
+                                </li>
+                                <li class="bg-bgBase p-4 rounded border-l-4 border-accentBlood shadow-sm">
+                                    <strong class="text-textBright block mb-1 cursor-help term" data-term="ativa">Habilidade Ativa</strong> Requer estar em campo e pagar custo.
+                                </li>
+                                <li class="bg-bgBase p-4 rounded border-l-4 border-accentSoul shadow-sm">
+                                    <strong class="text-textBright block mb-1 cursor-help term" data-term="gatilho">Habilidade de Gatilho</strong> Reação automática a eventos enquanto em campo.
+                                </li>
+                            </ul>
+                            <p class="text-sm bg-accentBlood/10 p-3 rounded border border-accentBlood/30"><strong class="text-accentBlood">Reinvocação:</strong> Custa 5 Alma inicialmente. Se morrer, o custo aumenta em +2 para cada morte anterior.</p>
+                        </div>
+                        <!-- Mockup Card -->
+                        <div class="flex justify-center">
+                            <div class="w-64 h-96 bg-bgCardDark border-2 border-accentGold rounded-lg p-3 relative shadow-glow-gold transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                                <div class="absolute top-2 right-2 bg-bgBase rounded-full w-8 h-8 flex items-center justify-center border border-accentGold text-accentGold font-bold">5</div>
+                                <div class="h-40 bg-gradient-to-b from-[#3a2020] to-bgCardDark rounded border border-borderDim mb-2"></div>
+                                <h4 class="font-cinzel font-bold text-center text-textBright text-lg mb-1 border-b border-borderDim pb-1">Kaelen, o Profano</h4>
+                                <p class="text-xs text-center text-textBright italic mb-2">Humano Cultista</p>
+                                <div class="text-[10px] space-y-2 leading-tight">
+                                    <p><strong class="text-accentGold">Passiva:</strong> Rituais custam -1 Alma.</p>
+                                    <p><strong class="text-accentBlood">Ativa (2):</strong> Destrói criatura c/ DEF ≤ 3.</p>
+                                    <p><strong class="text-accentSoul">Gatilho:</strong> Ao conjurar ritual, ganhe 1 Sofrimento.</p>
+                                </div>
+                                <div class="absolute bottom-2 right-2 flex gap-1 font-bold">
+                                    <span class="bg-accentBlood px-2 py-0.5 rounded text-white text-sm">4</span>
+                                    <span class="bg-bgCard px-2 py-0.5 rounded text-white text-sm border border-borderDim">5</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Criaturas -->
+                <div id="tab-criaturas" class="tab-content">
+                    <div class="max-w-3xl">
+                        <h3 class="font-cinzel text-3xl text-white mb-4">Os Servos do Abismo</h3>
+                        <p class="mb-6 leading-relaxed">Invoque criaturas pagando o custo em Alma. Elas viram para atacar e desviram na sua fase de manutenção. Limite de 3 cópias iguais por deck (Lendárias apenas 1).</p>
+                        
+                        <h4 class="font-bold text-accentGold mb-3 uppercase tracking-wider text-sm">Palavras-Chave de Combate</h4>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentBlood transition-colors" onclick="openModal('impeto')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') openModal('impeto')" aria-label="Abrir descrição de Ímpeto">
+                                <h5 class="text-accentBlood font-bold mb-1 flex items-center gap-2 term" data-term="impeto">⚡ Ímpeto</h5>
+                                <p class="text-sm text-textBright">Ataca no mesmo turno em que entra.</p>
+                            </div>
+                            <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentBlood transition-colors" onclick="openModal('furtividade')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') openModal('furtividade')" aria-label="Abrir descrição de Furtividade">
+                                <h5 class="text-textBright font-bold mb-1 flex items-center gap-2 term" data-term="furtividade">🗡️ Furtividade</h5>
+                                <p class="text-sm text-textBright">Pague 1 Alma extra para não ser bloqueado.</p>
+                            </div>
+                            <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentSoul transition-colors" onclick="openModal('voar')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') openModal('voar')" aria-label="Abrir descrição de Voar">
+                                <h5 class="text-accentSoul font-bold mb-1 flex items-center gap-2 term" data-term="voar">🦇 Voar</h5>
+                                <p class="text-sm text-textBright">Só pode ser bloqueada por quem voa.</p>
+                            </div>
+                            <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentGold transition-colors" onclick="openModal('vigilancia')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') openModal('vigilancia')" aria-label="Abrir descrição de Vigilância">
+                                <h5 class="text-accentGold font-bold mb-1 flex items-center gap-2 term" data-term="vigilancia">👁️ Vigilância</h5>
+                                <p class="text-sm text-textBright">Não precisa virar para atacar.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+ 
+                <!-- Tab: Rituais -->
+                <div id="tab-rituais" class="tab-content">
+                    <div class="max-w-3xl">
+                        <h3 class="font-cinzel text-3xl text-accentGold mb-4">Arquitetura da Perdição</h3>
+                        <p class="mb-6 leading-relaxed">Rituais são cartas <strong>permanentes</strong> que ficam em campo alterando as regras do jogo ou oferecendo habilidades ativáveis repetidamente.</p>
+                        
+                        <div class="bg-accentGold/10 border border-accentGold/30 p-6 rounded-lg mb-6">
+                            <h4 class="text-accentGold font-bold mb-2 flex items-center gap-2">
+                                ⚠️ A Regra do Círculo Fechado
+                            </h4>
+                            <p class="text-textMain">
+                                Conjurar rituais é mentalmente exaustivo. Por isso, você <strong class="text-white">só pode conjurar 1 Ritual por turno</strong>, independentemente de quanta Alma você possua.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Sortilegios -->
+                <div id="tab-sortilegios" class="tab-content">
+                    <div class="max-w-3xl">
+                        <h3 class="font-cinzel text-3xl text-accentSoul mb-4">Distorcendo a Realidade</h3>
+                        <p class="mb-6 leading-relaxed">Feitiços de impacto imediato e uso único. Fazem o efeito descrito e vão para o cemitério.</p>
+                        
+                        <div class="grid sm:grid-cols-2 gap-6">
+                            <div class="bg-bgBase border border-borderDim p-6 rounded-lg">
+                                <h4 class="text-white font-bold mb-2 text-xl">Sortilégio Padrão</h4>
+                                <p class="text-sm text-textBright">Conjurado apenas durante a sua Fase Principal.</p>
+                                <div class="absolute right-0 top-0 w-16 h-16 bg-accentBlood/10 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                                <h4 class="text-accentBlood font-bold mb-2 text-xl flex items-center gap-2">
+                                    Sortilégio de REAÇÃO
+                                    <span class="bg-accentBlood text-white text-xs px-2 py-0.5 rounded animate-pulse">!</span>
+                                </h4>
+                                <p class="text-sm text-textMain relative z-10">Pode ser usado no turno do oponente para atrapalhar seus planos. Resolve de trás pra frente (o último a ser jogado acontece primeiro).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="fases" class="max-w-4xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
+            <div class="text-center mb-16">
+                <h2 class="font-cinzel text-4xl text-textBright mb-4">O Ciclo do Caos</h2>
+                <p class="text-textMain">A anatomia de um turno. Siga a ordem estrita.</p>
+            </div>
+
+            <div class="relative py-4">
+                
+                <!-- Timeline Event 1 -->
+                <div class="relative pl-16 pb-12 group">
+                    <div class="timeline-line group-last:hidden"></div>
+                    <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 group-hover:bg-accentGold group-hover:text-bgBase transition-colors shadow-glow-gold">I</div>
+                    
+                    <div class="bg-bgCard border border-borderDim p-6 rounded-xl shadow-card transform transition-transform group-hover:translate-x-2">
+                        <h3 class="font-cinzel text-2xl text-white mb-3">Fase de Manutenção</h3>
+                        <ul class="space-y-2 text-textBright list-disc list-inside">
+                            <li>Desvire todas as suas cartas viradas.</li>
+                            <li>Ganhe <strong class="text-accentSoul">+4 Alma</strong> (até o limite de 12).</li>
+                            <li>Resolva gatilhos de "no início do seu turno".</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Timeline Event 2 -->
+                <div class="relative pl-16 pb-12 group">
+                    <div class="timeline-line group-last:hidden"></div>
+                    <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 group-hover:bg-accentGold group-hover:text-bgBase transition-colors shadow-glow-gold">II</div>
+                    
+                    <div class="bg-bgCard border border-borderDim p-6 rounded-xl shadow-card transform transition-transform group-hover:translate-x-2">
+                        <h3 class="font-cinzel text-2xl text-white mb-3">Fase Principal</h3>
+                        <p class="mb-3 text-sm text-accentGold">Em qualquer ordem, quantas vezes puder pagar:</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-bgBase border border-borderDim px-3 py-1 rounded text-sm">Conjurar Criaturas</span>
+                            <span class="bg-bgBase border border-borderDim px-3 py-1 rounded text-sm">Ativar Habilidades</span>
+                            <span class="bg-bgBase border border-borderDim px-3 py-1 rounded text-sm">Conjurar Sortilégios</span>
+                            <span class="bg-accentGold/15 border border-accentGold/40 px-3 py-1 rounded text-sm text-accentGold">Conjurar 1 Ritual</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Event 3 -->
+                <div class="relative pl-16 pb-12 group">
+                    <div class="timeline-line group-last:hidden"></div>
+                    <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentBlood rounded-full flex items-center justify-center font-cinzel font-bold text-accentBlood z-10 group-hover:bg-accentBlood group-hover:text-white transition-colors shadow-glow-blood animate-pulse">III</div>
+                    
+                    <div class="bg-gradient-to-r from-[#2a0808]/80 to-bgCard border border-accentBlood/40 p-6 rounded-xl shadow-card transform transition-transform group-hover:translate-x-2">
+                        <h3 class="font-cinzel text-2xl text-accentBlood mb-3 flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>
+                            Fase de Combate
+                        </h3>
+                        <ol class="list-decimal list-inside space-y-3 text-textMain marker:text-accentBlood marker:font-bold">
+                            <li><strong class="text-white">Ataque:</strong> Você vira atacantes.</li>
+                            <li><strong class="text-white">Defesa:</strong> Oponente escolhe bloqueadores (virados).</li>
+                            <li><strong class="text-white">Dano:</strong> Resolvido simultaneamente.</li>
+                        </ol>
+                        <div class="mt-4 p-3 bg-black/50 border-l-2 border-accentGold text-sm rounded">
+                            <strong class="text-accentGold block mb-1">A Regra do Sofrimento:</strong> 
+                            Se o dano passar direto e atingir a Essência, o oponente ganha <span class="term" data-term="sofrimento">1 Sofrimento a cada 3 de dano</span> recebido num único golpe.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Event 4 -->
+                <div class="relative pl-16 group">
+                    <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 group-hover:bg-accentGold group-hover:text-bgBase transition-colors shadow-glow-gold">IV</div>
+                    
+                    <div class="bg-bgCard border border-borderDim p-6 rounded-xl shadow-card transform transition-transform group-hover:translate-x-2">
+                        <h3 class="font-cinzel text-2xl text-white mb-3">Fase Final</h3>
+                        <ul class="space-y-2 text-textBright list-disc list-inside">
+                            <li>Resolva efeitos de "no final do turno".</li>
+                            <li>Descarte até ter <strong class="text-white">no máximo 7 cartas</strong> na mão.</li>
+                            <li class="text-accentBlood mt-2 p-2 bg-accentBlood/10 rounded border border-accentBlood/20">
+                                <strong>Verificação de Dor:</strong> Se terminar com 9+ Marcas de Sofrimento, perca 3 Essência! O marcador volta para 8.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="regras" class="max-w-4xl mx-auto px-4 mb-20 reveal">
+            <h2 class="font-cinzel text-3xl text-textBright border-b border-borderDim pb-4 mb-8">Regras Avançadas & Construção</h2>
+            
+            <div class="space-y-4">
+                <!-- Accordion 1 -->
+                <div class="bg-bgCard border border-borderDim rounded-lg overflow-hidden group">
+                    <button class="w-full px-6 py-4 text-left font-bold text-xl flex justify-between items-center hover:bg-bgCardHover transition-colors focus:outline-none" onclick="toggleAccordion('acc-deck')">
+                        Construindo seu Grimório (Deckbuilding)
+                        <span class="text-accentGold transition-transform duration-300 transform group-hover:rotate-180" id="icon-acc-deck">▼</span>
+                    </button>
+                    <div id="acc-deck" class="px-6 py-0 max-h-0 overflow-hidden transition-all duration-300 ease-in-out bg-bgBase">
+                        <div class="py-4 space-y-3 text-textMain/90">
+                            <p>O equilíbrio é chave para a vitória. Siga as leis absolutas:</p>
+                            <ul class="list-disc list-inside ml-2">
+                                <li><strong>Tamanho Exato:</strong> 39 cartas no deck + 1 Mestre do Culto (40 total).</li>
+                                <li><strong>Repetições:</strong> Máximo de 3 cópias da mesma carta comum.</li>
+                                <li><strong>Lendárias:</strong> Cartas marcadas com [L] são únicas (1 por deck).</li>
+                            </ul>
+                            <p class="text-sm italic text-textBright mt-2">Dica: Um bom deck tem cerca de 18-22 criaturas, 8 rituais e 10 sortilégios.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion 2 -->
+                <div class="bg-bgCard border border-borderDim rounded-lg overflow-hidden group">
+                    <button class="w-full px-6 py-4 text-left font-bold text-xl flex justify-between items-center hover:bg-bgCardHover transition-colors focus:outline-none" onclick="toggleAccordion('acc-win')">
+                        Condições de Vitória e Empate
+                        <span class="text-accentGold transition-transform duration-300 transform group-hover:rotate-180" id="icon-acc-win">▼</span>
+                    </button>
+                    <div id="acc-win" class="px-6 py-0 max-h-0 overflow-hidden transition-all duration-300 ease-in-out bg-bgBase">
+                        <div class="py-4 space-y-3 text-textMain/90">
+                            <p>Não há misericórdia no Suplício.</p>
+                            <ul class="list-disc list-inside ml-2">
+                                <li><strong>Eliminação:</strong> Chegar a 0 Essência (ou menos) elimina o jogador instantaneamente. Suas cartas vão ao cemitério.</li>
+                                <li><strong>Vitória:</strong> Ser o último jogador vivo (Essência > 0).</li>
+                                <li><strong class="text-accentBlood">Empate Sangrento:</strong> Se um efeito matar todos os jogadores restantes simultaneamente, declara-se empate e não há vencedores.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Simples -->
+    <footer class="border-t border-borderDim bg-bgBase py-8 text-center text-sm text-textMain/60">
+        <p class="font-cinzel text-accentGold text-lg mb-2">Que seus rituais sejam precisos e suas traições, mortais.</p>
+        <p>Suplício – Grimório Oficial de Regras v3.0</p>
+    </footer>
+
+    <div id="glossary-modal" class="fixed inset-0 bg-bgBase/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300" aria-modal="true" role="dialog">
+        <!-- Modal Content Container -->
+        <div class="bg-bgCard border border-accentGold max-w-lg w-full rounded-2xl shadow-glow-gold overflow-hidden transform scale-95 transition-all duration-300" id="modal-content-box">
+            
+            <div class="relative p-6 md:p-8">
+                <!-- Close Button -->
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-textMain/50 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition-colors focus:outline-none">
+                    ✕
+                </button>
+                
+                <!-- Icon Placeholder (dynamic via JS) -->
+                <div id="modal-icon" class="text-4xl mb-4">✨</div>
+                
+                <h3 id="modal-title" class="font-cinzel text-2xl md:text-3xl text-accentGold font-bold mb-4">Título</h3>
+                <div class="h-px w-full bg-gradient-to-r from-accentGold to-transparent mb-4"></div>
+                
+                <div class="text-lg text-textMain leading-relaxed space-y-3" id="modal-desc">
+                    Descrição vai aqui.
+                </div>
+                
+                <button onclick="closeModal()" class="mt-8 w-full py-3 bg-bgBase border border-borderDim text-textMain hover:bg-accentGold hover:text-bgBase hover:border-accentGold rounded font-bold tracking-widest font-cinzel transition-all focus:outline-none">
+                    COMPREENDIDO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * [ DATABASE DO GLOSSÁRIO ]
+         * Configuração dos termos interativos.
+         */
+        const dictionary = {
+            "essencia": {
+                icon: "🤍",
+                title: "Essência (Vida)",
+                desc: "Sua vitalidade primária. Você começa com 30 pontos. <br><br>Quando ela chega a 0, seu avatar sucumbe e você é imediatamente eliminado da partida."
+            },
+            "alma": {
+                icon: "🌌",
+                title: "Alma (Mana)",
+                desc: "O combustível mágico da criação. <br><br>Você inicia o jogo com 6 de Alma e recebe +4 na Fase de Manutenção de todos os seus turnos. O limite máximo de reserva que seu corpo suporta é 12."
+            },
+            "sofrimento": {
+                icon: "🩸",
+                title: "Marcas de Sofrimento",
+                desc: "A dor convertida em poder. Ganha-se 1 marca para cada 3 de dano sofrido de uma mesma fonte.<br><br><strong class='text-accentBlood'>O Custo da Dor:</strong> Cartas sombrias usam isso como pagamento. Mas se você terminar o turno com 9+ marcas, o excesso frita sua mente: você perde 3 de Essência imediatamente."
+            },
+            "impeto": {
+                icon: "⚡",
+                title: "Ímpeto",
+                desc: "Uma criatura com Ímpeto é frenética. Ela ignora a regra de enjoo de invocação e <strong>pode atacar no exato mesmo turno</strong> em que foi jogada em campo. Ideal para forçar dano rápido antes do oponente se organizar."
+            },
+            "furtividade": {
+                icon: "🗡️",
+                title: "Furtividade",
+                desc: "Mestres das sombras. Ao declarar ataque com esta criatura, você pode pagar 1 Alma extra. Se o fizer, ela <strong>não poderá ser bloqueada</strong> por nenhuma criatura. Use-a para furar a defesa inimiga e garantir dano direto."
+            },
+            "voar": {
+                icon: "🦇",
+                title: "Voar",
+                desc: "Assalto aéreo. Criaturas com Voar <strong>só podem ser bloqueadas</strong> por outras criaturas que também possuam a habilidade Voar ou alcance especial. Aproveite isso para ignorar a maioria das defesas terrestres."
+            },
+            "vigilancia": {
+                icon: "👁️",
+                title: "Vigilância",
+                desc: "Inabalável. Uma criatura com Vigilância <strong>não vira</strong> quando ataca. Isso permite que ela golpeie no seu turno e continue pronta para defender no turno do oponente. É ideal em decks que precisam manter controle de mesa."
+            },
+            "passiva": {
+                icon: "🛡️",
+                title: "Habilidade Passiva",
+                desc: "Um poder do seu Mestre que altera as regras do jogo. Está <strong>ativa permanentemente</strong>, desde a rodada 1, mesmo que o Mestre esteja na Zona de Comando (fora do campo)."
+            },
+            "ativa": {
+                icon: "⚔️",
+                title: "Habilidade Ativa",
+                desc: "Uma ação manual do seu Mestre. Ele <strong>precisa estar invocado no campo</strong>. Você paga o custo (ex: 2 Alma) na sua Fase Principal e o efeito acontece."
+            },
+            "gatilho": {
+                icon: "⚙️",
+                title: "Habilidade de Gatilho",
+                desc: "Uma resposta mecânica. Só funciona se o Mestre estiver em campo. Exemplo: <em>'Sempre que uma criatura morrer, ganhe 1 Alma'</em>. Ocorre automaticamente sem custo."
+            },
+            "limite_ritual": {
+                icon: "⚠️",
+                title: "O Limite de Rituais",
+                desc: "Rituais são magias densas e perigosas que alteram permanentemente o estado da mesa. Devido ao estresse mental, o livro de regras estipula: <strong>Apenas 1 Ritual pode ser jogado por turno por jogador.</strong>"
+            },
+            "reacao": {
+                icon: "🔥",
+                title: "Sortilégio de Reação",
+                desc: "Mágicas na velocidade do pensamento. Podem ser conjuradas a qualquer momento, <strong>inclusive no turno do adversário</strong> para anular ataques ou efeitos.<br><br><em>A pilha é resolvida de trás para frente (o último jogado age primeiro).</em>"
+            }
+        };
+
+        /**
+         * [ LÓGICA DO MODAL ]
+         */
+        const modal = document.getElementById('glossary-modal');
+        const modalContentBox = document.getElementById('modal-content-box');
+
+        function openModal(termKey) {
+            const data = dictionary[termKey];
+            if (!data) return;
+
+            // Injeta dados no HTML
+            document.getElementById('modal-title').innerHTML = data.title;
+            document.getElementById('modal-desc').innerHTML = data.desc;
+            document.getElementById('modal-icon').innerHTML = data.icon;
+
+            // Animação de entrada
+            modal.classList.remove('hidden');
+            void modal.offsetWidth; // Força repaint
+            modal.classList.remove('opacity-0');
+            modalContentBox.classList.remove('scale-95');
+            
+            // Trava o scroll da página
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            // Animação de saída
+            modal.classList.add('opacity-0');
+            modalContentBox.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.style.overflow = ''; // Restaura o scroll
+            }, 300);
+        }
+
+        // Fecha modal ao clicar no fundo escuro
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Fecha modal com tecla ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape" && !modal.classList.contains('hidden')) closeModal();
+        });
+
+
+        /**
+         * [ LÓGICA DAS ABAS (TABS) ]
+         */
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove estado ativo de todos
+                tabBtns.forEach(b => {
+                    b.classList.remove('active', 'border-b-0', 'bg-bgCard', 'text-textBright');
+                    b.classList.add('bg-bgBase', 'text-textMain');
+                });
+                tabContents.forEach(c => c.classList.remove('active'));
+
+                // Ativa o clicado
+                btn.classList.add('active', 'border-b-0', 'bg-bgCard', 'text-textBright');
+                btn.classList.remove('bg-bgBase', 'text-textMain');
+                
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+
+        /**
+         * [ LÓGICA DO ACCORDION ]
+         */
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            
+            if (content.style.maxHeight) {
+                // Fechar
+                content.style.maxHeight = null;
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Abrir
+                content.style.maxHeight = content.scrollHeight + "px";
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+
+        /**
+         * [ SCROLL ANIMATIONS (Intersection Observer) ]
+         */
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // Anima apenas uma vez
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach((el) => {
+            observer.observe(el);
+        });
+
+
+        /**
+         * [ MENU MOBILE ]
+         */
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const nav = document.getElementById('navbar');
+        // Simple logic: on mobile, you might want to expand a menu. 
+        // For this single page design, relying on native scroll is usually fine, 
+        // but we add the button visually for completeness.
+
+
+        /**
+         * [ EFEITO DE PARTICULAS NO CANVAS ]
+         * Cria pequenas brasas/cinzas mágicas flutuando ao fundo.
+         */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedY = Math.random() * -0.5 - 0.1; // Flutua pra cima
+                this.speedX = Math.random() * 0.4 - 0.2; // Deriva suave
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+
+                // Reposiciona se sair da tela
+                if (this.y < 0) {
+                    this.y = canvas.height;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(244, 162, 97, ${this.opacity})`; // Accent Gold color
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            // Quantidade de partículas baseada na largura da tela
+            const particleCount = Math.floor(window.innerWidth / 15);
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+    </script>
+</body>
+</html>
