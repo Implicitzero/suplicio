@@ -69,11 +69,10 @@
             z-index: -1; pointer-events: none; opacity: 0.6;
         }
 
-        /* Temas Dinâmicos de Fundo */
         body.theme-blood { background-color: #1a0505; transition: background-color 2s ease; }
         body.theme-eye { background-color: #020508; transition: background-color 2s ease; }
-        body.theme-essence { background-color: #121417; transition: background-color 0.5s ease; }
-        body.theme-soul { background-color: #041014; transition: background-color 2s ease; }
+        body.theme-essence { background-color: #050505; transition: background-color 0.5s ease; }
+        body.theme-soul { background-color: #02080a; transition: background-color 2s ease; }
 
         .term {
             color: var(--accent-gold); font-weight: 600;
@@ -158,6 +157,18 @@
         .sacrificing { box-shadow: inset 0 0 150px 50px rgba(230, 57, 70, 0.8) !important; }
         .draining { box-shadow: inset 0 0 150px 50px rgba(248, 249, 250, 0.4) !important; }
 
+        /* Animação do Texto Cósmico de Derrota (Subindo) */
+        @keyframes scrollDefeatText {
+            0% { transform: translateY(100vh); opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { transform: translateY(-100%); opacity: 0; }
+        }
+        
+        .defeat-text-anim {
+            animation: scrollDefeatText 120s linear forwards;
+        }
+
         /* O Olho Interativo do Rodapé */
         .eye-container {
             width: 44px; height: 44px; margin: 0 auto;
@@ -184,9 +195,24 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Sidebar Mobile Overlay */
         .sidebar-overlay {
             background-color: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+        }
+        
+        #flashbang {
+            transition: opacity 1s cubic-bezier(0.5, 0, 0, 1);
+        }
+        
+        /* Animação do Texto de Derrota (Subindo) */
+        @keyframes scrollDefeatText {
+            0% { transform: translateY(100vh); opacity: 0; }
+            5% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100%); opacity: 0; }
+        }
+        
+        .defeat-text-anim {
+            animation: scrollDefeatText 120s linear forwards;
         }
     </style>
 </head>
@@ -196,295 +222,350 @@
     <div id="blood-vignette"></div>
     <div id="essence-vignette"></div>
 
-    <nav class="fixed top-0 w-full bg-bgBase/80 backdrop-blur-md border-b border-borderDim z-40 transition-all duration-300">
-        <div class="max-w-6xl mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">
-            <a href="#" class="font-cinzel text-accentGold font-bold text-2xl tracking-widest flex items-center gap-2 group">
-                <span class="text-accentBlood group-hover:animate-ping">◈</span> SUPLÍCIO
-            </a>
-            <div class="hidden md:flex gap-8 text-sm font-bold tracking-wider text-textMain">
-                <a href="#recursos" class="hover:text-accentGold transition-colors">RECURSOS</a>
-                <a href="#cartas" class="hover:text-accentGold transition-colors">CARTAS</a>
-                <a href="#fases" class="hover:text-accentGold transition-colors">O TURNO</a>
-                <a href="#regras" class="hover:text-accentGold transition-colors">RITOS</a>
-            </div>
-            <!-- Botão Menu Mobile -->
-            <button id="mobile-menu-btn" class="md:hidden text-textMain hover:text-white p-2">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-            </button>
-        </div>
-    </nav>
+    <!-- Flashbang Branco da Morte -->
+    <div id="flashbang" class="fixed inset-0 bg-white z-[99999] opacity-0 pointer-events-none transition-opacity duration-1000 hidden"></div>
 
-    <!-- Sidebar Mobile -->
-    <div id="mobile-sidebar-overlay" class="fixed inset-0 sidebar-overlay z-50 hidden opacity-0 transition-opacity duration-300"></div>
-    <div id="mobile-sidebar" class="fixed top-0 right-0 h-full w-64 bg-bgCard border-l border-borderDim z-50 transform translate-x-full transition-transform duration-300 flex flex-col p-6 shadow-2xl">
-        <button id="close-sidebar-btn" class="self-end text-textMain hover:text-white mb-8 p-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-        <nav class="flex flex-col gap-6 text-lg font-cinzel font-bold tracking-widest">
-            <a href="#recursos" class="mobile-link text-textMain hover:text-accentGold transition-colors border-b border-borderDim pb-2">RECURSOS</a>
-            <a href="#cartas" class="mobile-link text-textMain hover:text-accentGold transition-colors border-b border-borderDim pb-2">CARTAS</a>
-            <a href="#fases" class="mobile-link text-textMain hover:text-accentGold transition-colors border-b border-borderDim pb-2">O TURNO</a>
-            <a href="#regras" class="mobile-link text-textMain hover:text-accentGold transition-colors border-b border-borderDim pb-2">RITOS</a>
-        </nav>
+    <!-- Tela de Derrota Cósmica -->
+    <div id="defeat-container" class="fixed inset-0 z-[50000] hidden flex-col justify-start items-center overflow-hidden bg-black/60 cursor-pointer" title="Clique em qualquer lugar para ressuscitar...">
+        <div id="defeat-text" class="w-full max-w-5xl px-6 font-cinzel text-textMain text-2xl md:text-3xl lg:text-4xl leading-[2.5] text-center space-y-24 drop-shadow-2xl opacity-0 transform translate-y-[100vh] py-32">
+            
+            <p class="text-accentBlood font-black tracking-[0.5em] text-5xl md:text-7xl mb-24 drop-shadow-[0_0_15px_rgba(230,57,70,0.8)] uppercase">O Fim</p>
+            
+            <p class="tracking-widest">A poeira enfim assenta sobre as ruínas daquilo que você jurou proteger.</p>
+            <p class="tracking-widest">O silêncio que se segue não traz paz, mas sim um luto sufocante e absoluto.</p>
+            <p class="tracking-widest text-white/80">Este é o verdadeiro suplício: não a dor física do último golpe, mas a agonia letárgica e fria de saber que tudo, irremediavelmente, acabou.</p>
+            
+            <p class="text-accentBlood font-black text-6xl md:text-8xl tracking-[0.2em] drop-shadow-[0_0_20px_rgba(230,57,70,1)] my-32">Você falhou.</p>
+            
+            <p class="tracking-wider">Olhe para as suas próprias mãos. Elas tremeram quando mais precisavam ser firmes.</p>
+            <p class="tracking-wider text-white/70">Cada escolha... cada noite em claro... cada passo tortuoso e sangrento que o trouxe até a beira do precipício foi em vão.</p>
+            <p class="tracking-widest">O peso do mundo estava sobre os seus ombros, e você cedeu.</p>
+            <p class="tracking-wider">Você se provou exatamente aquilo que as vozes mais sombrias da sua mente sussurravam nas madrugadas: <br><span class="text-accentBlood/80 font-bold text-5xl mt-6 block">um fracasso absoluto.</span></p>
+            
+            <p class="tracking-widest text-textMuted my-24">A tela escura à sua frente reflete apenas a sombra pálida de alguém que tentou, mas que simplesmente não foi o suficiente.</p>
+            <p class="tracking-wider">O <span class="text-accentBlood">Game Over</span> que pisca diante dos seus olhos não é apenas uma mecânica...</p>
+            <p class="tracking-widest">É o atestado final e cruel da sua mediocridade.</p>
+            <p class="tracking-wider text-white/80">A lembrança daqueles que confiaram em você agora é um veneno que queima de dentro para fora.</p>
+            
+            <p class="tracking-[0.3em] uppercase text-xl md:text-2xl text-accentBlood/60">Não há honra na sua derrota.</p>
+            <p class="tracking-[0.3em] uppercase text-xl md:text-2xl text-accentBlood/60">Não há canções para a sua queda.</p>
+            
+            <p class="tracking-widest">Resta apenas o abraço implacável do chão gelado e o abismo infinito da sua própria insuficiência engolindo tudo.</p>
+            <p class="tracking-wider text-white/90">O seu destino foi traçado pela sua própria incompetência.</p>
+            
+            <div class="h-40"></div> <!-- Pausa Dramática -->
+            
+            <p class="text-white italic tracking-widest opacity-80">Mas... no meio das cinzas, preste atenção ao silêncio.</p>
+            
+            <p class="tracking-wider text-textMuted">No fundo desse abismo escuro, no exato lugar onde nem mesmo o desespero consegue mais alcançar...</p>
+            <p class="tracking-[0.4em] text-accentGold/80">algo pulsa.</p>
+            <p class="tracking-wider">É um ritmo fraco. Trêmulo. Quase imperceptível.</p>
+            <p class="tracking-widest text-white">Mas está lá.</p>
+            
+            <p class="tracking-[0.2em] font-bold text-3xl mt-12">O seu coração ainda bate.</p>
+            <p class="tracking-[0.2em] font-bold text-3xl">O ar ainda enche os seus pulmões.</p>
+            
+            <p class="tracking-wider mt-12">O cenário pode ter sido destruído e a coroa pode estar partida...</p>
+            <p class="tracking-widest text-accentGold">mas o controle da sua vontade ainda repousa em suas mãos.</p>
+            <p class="tracking-wider">O verdadeiro fim, o suplício eterno, só se concretiza no exato momento em que você decide não voltar.</p>
+            <p class="tracking-widest text-white/90">O fracasso agonizante de hoje é o fogo violento que forja o aço da sua resiliência para o amanhã.</p>
+            <p class="tracking-widest font-bold">A dor ensina os padrões. A queda mapeia o caminho.</p>
+            
+            <div class="h-20"></div>
+            
+            <p class="text-accentGold font-black text-5xl md:text-6xl tracking-[0.2em] mt-12 animate-pulse uppercase drop-shadow-[0_0_15px_rgba(244,162,97,0.8)]">Levante-se, Jogador.</p>
+            <p class="tracking-widest text-3xl">Limpe o sangue do rosto.</p>
+            <p class="tracking-wider leading-[2]">O suplício não é o ponto final da sua história;<br>ele é apenas o doloroso, porém necessário, <span class="text-white font-bold">prelúdio da sua ressurreição.</span></p>
+            
+            <div class="h-[50vh]"></div>
+        </div>
     </div>
 
-    <main class="pt-28 pb-24 overflow-hidden relative z-10">
-        
-        <header class="max-w-4xl mx-auto px-4 text-center py-20 relative reveal">
-            <div class="inline-block mb-6 p-4 rounded-full bg-bgCard border border-borderDim shadow-card hover:scale-110 transition-transform cursor-pointer" onclick="triggerBlood()">
-                <svg class="w-12 h-12 text-accentBlood drop-shadow-[0_0_8px_rgba(230,57,70,0.8)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M12 2L2 22h20L12 2zm0 6l6 12H6l6-12z" stroke-linejoin="round"/>
-                    <circle cx="12" cy="15" r="2" fill="currentColor"/>
-                </svg>
-            </div>
-            
-            <h1 id="main-title" class="font-cinzel text-5xl md:text-7xl lg:text-8xl font-black text-textBright mb-6 uppercase tracking-widest drop-shadow-2xl cursor-pointer select-none transition-colors">
-                Suplício
-            </h1>
-            <p class="font-cinzel text-xl md:text-2xl text-accentGold tracking-[0.2em] mb-12">O Grimório de Regras Oficial</p>
-            
-            <div class="bg-bgCard/90 border border-borderDim rounded-2xl p-8 backdrop-blur-sm shadow-card max-w-3xl mx-auto text-left relative overflow-hidden group hover:border-accentGold transition-colors duration-500">
-                <div class="absolute -top-20 -right-20 w-40 h-40 bg-accentGold/5 rounded-full blur-3xl group-hover:bg-accentGold/15 transition-all"></div>
-                
-                <h3 class="font-cinzel text-2xl text-textBright mb-4 flex items-center gap-2">
-                    <span class="text-accentBlood">◆</span> O Chamado
-                </h3>
-                <p class="mb-4 text-textMain leading-relaxed">Bem-vindo, Arcanista. Você lidera um culto secreto em busca da dominação mundial através de magia proibida e horrores indescritíveis. <span class="lore-secret" data-secret="Muitos enlouqueceram aqui.">Sua jornada será longa.</span></p>
-                <p class="leading-relaxed">Sua missão é solitária e cruel: reduza a <span class="term" data-term="essencia">Essência</span> de seus oponentes a zero. Não há tabuleiro, apenas o seu grimório de 40 cartas e a sua astúcia.</p>
-            </div>
-        </header>
-
-        <section id="recursos" class="max-w-6xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
-            <div class="text-center mb-16">
-                <h2 class="font-cinzel text-4xl text-textBright mb-4">As Forças do Oculto</h2>
-                <div class="h-1 w-24 bg-accentBlood mx-auto rounded-full"></div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim rounded-2xl p-8 shadow-card hover:border-accentEssence hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-100" onclick="openModal('essencia')">
-                    <div class="w-20 h-20 rounded-full bg-accentEssence/5 border border-accentEssence/20 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform shadow-glow-essence">🤍</div>
-                    <h3 class="font-cinzel font-bold text-2xl text-white mb-2">Essência</h3>
-                    <div class="text-4xl font-black text-textBright mb-4">30 <span class="text-base font-normal text-textMain">Max</span></div>
-                    <p class="text-textBright text-sm flex-grow">Sua força vital. Se chegar a zero, seu culto é banido para sempre e você é eliminado.</p>
-                    <button class="mt-6 text-xs text-white uppercase tracking-wider font-bold border border-white/30 px-4 py-2 rounded-full group-hover:bg-white group-hover:text-bgBase transition-colors">Decifrar</button>
+    <nav class="fixed top-0 w-full bg-bgBase/80 backdrop-blur-md border-b border-borderDim z-40 transition-all duration-300">
+            <div class="max-w-6xl mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">
+                <a href="#" class="font-cinzel text-accentGold font-bold text-2xl tracking-widest flex items-center gap-2 group">
+                    <span class="text-accentBlood group-hover:animate-ping">◈</span> SUPLÍCIO
+                </a>
+                <div class="hidden md:flex gap-8 text-sm font-bold tracking-wider text-textMain">
+                    <a href="#recursos" class="hover:text-accentGold transition-colors">RECURSOS</a>
+                    <a href="#cartas" class="hover:text-accentGold transition-colors">CARTAS</a>
+                    <a href="#fases" class="hover:text-accentGold transition-colors">O TURNO</a>
+                    <a href="#regras" class="hover:text-accentGold transition-colors">RITOS</a>
                 </div>
-
-                <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim rounded-2xl p-8 shadow-card hover:border-accentSoul hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-200" onclick="openModal('alma')">
-                    <div class="w-20 h-20 rounded-full bg-accentSoul/10 border border-accentSoul/30 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform shadow-glow-soul">🌌</div>
-                    <h3 class="font-cinzel font-bold text-2xl text-accentSoul mb-2">Alma</h3>
-                    <div class="flex items-baseline justify-center gap-2 mb-4">
-                        <span class="text-4xl font-black text-textBright">6</span>
-                        <span class="text-accentSoul font-bold">+4/turno</span>
-                    </div>
-                    <p class="text-textBright text-sm flex-grow">A mana cósmica usada para conjurar feitiços e invocar abominações. (Máx 12).</p>
-                    <button class="mt-6 text-xs text-accentSoul uppercase tracking-wider font-bold border border-accentSoul/30 px-4 py-2 rounded-full group-hover:bg-accentSoul group-hover:text-bgBase transition-colors">Decifrar</button>
-                </div>
-
-                <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim rounded-2xl p-8 shadow-card hover:border-accentBlood hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-300" onclick="openModal('sofrimento')">
-                    <div class="w-20 h-20 rounded-full bg-accentBlood/10 border border-accentBlood/30 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 group-hover:rotate-12 transition-transform shadow-glow-blood">🩸</div>
-                    <h3 class="font-cinzel font-bold text-2xl text-accentBlood mb-2">Sofrimento</h3>
-                    <div class="text-4xl font-black text-textBright mb-4">0 <span class="text-base font-normal text-textBright">Marcas</span></div>
-                    <p class="text-textBright text-sm flex-grow">Gerado pela dor. Paga magias ocultas, mas <span class="lore-secret" data-secret="A dor cobra seu preço.">pune o corpo</span> se passar de 8.</p>
-                    <button class="mt-6 text-xs text-accentBlood uppercase tracking-wider font-bold border border-accentBlood/30 px-4 py-2 rounded-full group-hover:bg-accentBlood group-hover:text-bgBase transition-colors">Decifrar</button>
-                </div>
+                <!-- Botão Menu Mobile -->
+                <button id="mobile-menu-btn" class="md:hidden text-textMain hover:text-white p-2 focus:outline-none">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
             </div>
-        </section>
+        </nav>
 
-        <!-- SEÇÕES DE CARTAS E FASES OMITIDAS (Mantém a estrutura original do código) -->
-        <section id="cartas" class="max-w-6xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
-            <div class="text-center mb-12">
-                <h2 class="font-cinzel text-4xl text-textBright mb-4">O Arsenal Arcano</h2>
-                <p class="text-textMain max-w-2xl mx-auto">Seu deck é composto por exatas 40 cartas. Explore os tomos abaixo.</p>
-            </div>
-
-            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
-                <button class="tab-btn active px-6 py-3 font-cinzel font-bold text-sm border border-borderDim rounded-t-lg bg-bgCard/90 text-textBright border-b-0 hover:bg-bgCardHover" data-target="tab-mestre">Mestre do Culto</button>
-                <button class="tab-btn px-6 py-3 font-cinzel font-bold text-sm border border-borderDim rounded-t-lg bg-bgBase/90 text-textMain hover:bg-bgCardHover" data-target="tab-criaturas">Criaturas</button>
-                <button class="tab-btn px-6 py-3 font-cinzel font-bold text-sm border border-borderDim rounded-t-lg bg-bgBase/90 text-textMain hover:bg-bgCardHover" data-target="tab-rituais">Rituais & Magias</button>
-            </div>
-
-            <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim rounded-b-xl rounded-tr-xl p-6 md:p-10 shadow-card min-h-[400px]">
-                
-                <div id="tab-mestre" class="tab-content active">
-                    <div class="grid md:grid-cols-2 gap-10 items-center">
-                        <div>
-                            <h3 class="font-cinzel text-3xl text-accentGold mb-4 flex items-center gap-3">
-                                <span class="bg-accentGold/20 p-2 rounded text-xl shadow-glow-gold">👑</span> O Avatar da Vontade
-                            </h3>
-                            <p class="mb-6 leading-relaxed">Carta obrigatória e líder. Fica visível fora do deck desde o início e possui 3 habilidades:</p>
-                            <ul class="space-y-4 mb-6">
-                                <li class="bg-bgBase/90 p-4 rounded border-l-4 border-accentGold shadow-sm hover:translate-x-1 transition-transform">
-                                    <div class="mb-1"><span class="term cursor-help text-lg inline-block" data-term="passiva">Habilidade Passiva</span></div>
-                                    <p class="text-sm text-textMain">Sempre ativa, mesmo fora de campo.</p>
-                                </li>
-                                <li class="bg-bgBase/90 p-4 rounded border-l-4 border-accentBlood shadow-sm hover:translate-x-1 transition-transform">
-                                    <div class="mb-1"><span class="term cursor-help text-lg inline-block" data-term="ativa">Habilidade Ativa</span></div>
-                                    <p class="text-sm text-textMain">Requer estar em campo e pagar custo em Alma.</p>
-                                </li>
-                                <li class="bg-bgBase/90 p-4 rounded border-l-4 border-accentSoul shadow-sm hover:translate-x-1 transition-transform">
-                                    <div class="mb-1"><span class="term cursor-help text-lg inline-block" data-term="gatilho">Habilidade de Gatilho</span></div>
-                                    <p class="text-sm text-textMain">Reação automática do universo a eventos da batalha.</p>
-                                </li>
-                            </ul>
-                        </div>
-                        
-                        <div class="flex justify-center tilt-card-container">
-                            <div id="kaelen-card" class="tilt-card w-64 h-96 bg-bgCardDark border-2 border-accentGold rounded-lg p-3 relative shadow-glow-gold cursor-pointer select-none">
-                                <div class="absolute top-2 right-2 bg-bgBase rounded-full w-8 h-8 flex items-center justify-center border border-accentGold text-accentGold font-bold z-10">5</div>
-                                <div class="h-40 bg-gradient-to-br from-[#4a1c1c] via-[#2a1010] to-bgCardDark rounded border border-borderDim mb-2 overflow-hidden relative flex items-center justify-center">
-                                    <svg class="w-20 h-20 text-accentGold/20 absolute" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z"/></svg>
-                                    <span class="text-accentGold/40 font-cinzel text-4xl">K</span>
-                                </div>
-                                <h4 class="font-cinzel font-bold text-center text-textBright text-lg mb-1 border-b border-borderDim pb-1">Kaelen, o Profano</h4>
-                                <p class="text-xs text-center text-textMuted italic mb-2">Humano Cultista</p>
-                                <div class="text-[10px] space-y-2 leading-tight text-textMain">
-                                    <p><strong class="text-accentGold">Passiva:</strong> Rituais custam -1 Alma.</p>
-                                    <p><strong class="text-accentBlood">Ativa (2):</strong> Destrói criatura c/ DEF ≤ 3.</p>
-                                    <p><strong class="text-accentSoul">Gatilho:</strong> Ao conjurar ritual, ganhe 1 Sofrimento.</p>
-                                </div>
-                                <div class="absolute bottom-2 right-2 flex gap-1 font-bold z-10">
-                                    <span class="bg-accentBlood px-2 py-0.5 rounded text-white text-sm" title="Ataque">4</span>
-                                    <span class="bg-bgCard px-2 py-0.5 rounded text-white text-sm border border-borderDim" title="Defesa">5</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Demais abas ocultas para simplificar visualização na edição, o código das abas Criaturas e Rituais permanece inalterado -->
-                 <div id="tab-criaturas" class="tab-content">
-                    <div class="max-w-3xl">
-                        <h3 class="font-cinzel text-3xl text-white mb-4">Os Servos do Abismo</h3>
-                        <p class="mb-6 leading-relaxed">Invoque criaturas pagando Alma. Elas viram para atacar e desviram na manutenção.</p>
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentBlood group" onclick="openModal('impeto')">
-                                <h5 class="text-accentBlood font-bold mb-1 flex items-center gap-2 group-hover:scale-105 transition-transform">⚡ Ímpeto</h5>
-                                <p class="text-sm text-textBright">Ataca no mesmo turno em que entra.</p>
-                            </div>
-                            <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-textBright group" onclick="openModal('furtividade')">
-                                <h5 class="text-textBright font-bold mb-1 flex items-center gap-2 group-hover:scale-105 transition-transform">🗡️ Furtividade</h5>
-                                <p class="text-sm text-textBright">Pague +1 Alma para não ser bloqueado.</p>
-                            </div>
-                            <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentSoul group" onclick="openModal('voar')">
-                                <h5 class="text-accentSoul font-bold mb-1 flex items-center gap-2 group-hover:scale-105 transition-transform">🦇 Voar</h5>
-                                <p class="text-sm text-textBright">Só pode ser bloqueada por quem voa.</p>
-                            </div>
-                            <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentGold group" onclick="openModal('vigilancia')">
-                                <h5 class="text-accentGold font-bold mb-1 flex items-center gap-2 group-hover:scale-105 transition-transform">👁️ Vigilância</h5>
-                                <p class="text-sm text-textBright">Não precisa virar para atacar.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="tab-rituais" class="tab-content">
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div>
-                            <h3 class="font-cinzel text-2xl text-accentGold mb-3">Rituais (Permanentes)</h3>
-                            <p class="text-sm mb-4">Ficam em campo alterando as regras.</p>
-                            <div class="bg-accentGold/10 border border-accentGold/30 p-4 rounded-lg">
-                                <h4 class="text-accentGold font-bold mb-2">⚠️ A Regra de 1 Ritual</h4>
-                                <p class="text-sm text-textBright">Devido ao estresse mental, você <strong>só pode conjurar 1 Ritual por turno</strong>.</p>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="font-cinzel text-2xl text-accentSoul mb-3">Sortilégios (Únicos)</h3>
-                            <p class="text-sm mb-4">Feitiços de uso único que vão ao cemitério.</p>
-                            <div class="bg-bgBase border border-borderDim p-4 rounded-lg">
-                                <h4 class="text-accentBlood font-bold mb-2 flex items-center gap-2">
-                                    Sortilégio de REAÇÃO <span class="bg-accentBlood text-white text-xs px-2 rounded animate-pulse">!</span>
-                                </h4>
-                                <p class="text-sm text-textBright">Pode ser usado no turno do oponente! A pilha resolve de trás pra frente.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="fases" class="max-w-4xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
-            <div class="text-center mb-16">
-                <h2 class="font-cinzel text-4xl text-textBright mb-4">O Ciclo do Caos</h2>
-                <p class="text-textMain">A anatomia de um turno. A ordem é absoluta.</p>
-            </div>
-
-            <div class="relative py-4">
-                <div class="relative pl-16 pb-12 group cursor-default">
-                    <div class="timeline-line"></div>
-                    <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 shadow-glow-gold transition-transform group-hover:scale-125">I</div>
-                    <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim p-6 rounded-xl shadow-card transition-colors group-hover:border-accentGold">
-                        <h3 class="font-cinzel text-2xl text-white mb-2">Fase de Manutenção</h3>
-                        <p class="text-textBright text-sm">Desvire cartas, ganhe +4 Alma e resolva gatilhos iniciais.</p>
-                    </div>
-                </div>
-
-                <div class="relative pl-16 pb-12 group cursor-default">
-                    <div class="timeline-line"></div>
-                    <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 shadow-glow-gold transition-transform group-hover:scale-125">II</div>
-                    <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim p-6 rounded-xl shadow-card transition-colors group-hover:border-accentGold">
-                        <h3 class="font-cinzel text-2xl text-white mb-2">Fase Principal</h3>
-                        <p class="text-textBright text-sm">Invoque criaturas, magias, 1 ritual, ative habilidades em qualquer ordem.</p>
-                    </div>
-                </div>
-
-                <div class="relative pl-16 pb-12 group cursor-default">
-                    <div class="timeline-line"></div>
-                    <div class="absolute left-2 top-0 w-10 h-10 bg-accentBlood border-2 border-accentBlood rounded-full flex items-center justify-center font-cinzel font-bold text-white z-10 shadow-glow-blood animate-pulse transition-transform group-hover:scale-125">III</div>
-                    <div class="bg-gradient-to-r from-[#2a0808]/90 to-bgCard/90 backdrop-blur-sm border border-accentBlood/40 p-6 rounded-xl shadow-card transition-colors group-hover:border-accentBlood">
-                        <h3 class="font-cinzel text-2xl text-accentBlood mb-4 flex items-center gap-2">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>
-                            Fase de Combate
-                        </h3>
-                        <ol class="list-decimal list-inside space-y-2 text-textMain mb-4">
-                            <li><strong class="text-white">Ataque:</strong> Declare e vire atacantes.</li>
-                            <li><strong class="text-white">Defesa:</strong> Oponente escolhe os bloqueios.</li>
-                            <li><strong class="text-white">Dano:</strong> Todo dano é resolvido simultaneamente.</li>
-                        </ol>
-                        <div class="p-3 bg-bgBase/90 border-l-2 border-accentGold text-sm rounded shadow-inner">
-                            <strong class="text-accentGold block mb-1">A Regra de Ouro:</strong> 
-                            Dano direto na Essência gera <span class="term inline-block" data-term="sofrimento">Sofrimento</span>.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="relative pl-16 group cursor-default">
-                    <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 shadow-glow-gold transition-transform group-hover:scale-125">IV</div>
-                    <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim p-6 rounded-xl shadow-card transition-colors group-hover:border-accentGold">
-                        <h3 class="font-cinzel text-2xl text-white mb-2">Fase Final</h3>
-                        <p class="text-textBright text-sm">Gatilhos finais, descarte para ter 7 cartas na mão. <span class="text-accentBlood font-bold">Verifique se o Sofrimento passou de 8!</span></p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SEÇÃO: RITOS -->
-        <section id="regras" class="max-w-4xl mx-auto px-4 mb-20 reveal">
-            <h2 class="font-cinzel text-3xl text-textBright border-b border-borderDim pb-4 mb-8">Ritos de Passagem</h2>
-            <div class="bg-bgCard/90 border border-borderDim p-6 rounded-xl shadow-card">
-                <p class="mb-4">As regras de deckbuilding são o cerne de um culto poderoso:</p>
-                <ul class="list-disc list-inside space-y-2 mb-4 text-textBright">
-                    <li>39 cartas + 1 Mestre do Culto (40 total).</li>
-                    <li>Máximo de 3 cópias da mesma carta comum.</li>
-                    <li>Lendárias marcadas com [L] são únicas.</li>
-                </ul>
-                <p class="text-sm text-textMuted italic">O verdadeiro vencedor de Suplício é aquele que forja o melhor deck e controla a dor do sofrimento.</p>
-            </div>
-        </section>
-
-    </main>
-
-    <footer class="border-t border-borderDim bg-bgBase/90 py-12 text-center text-sm text-textMain/60 relative z-10">
-        <p class="font-cinzel text-accentGold text-lg mb-2">Que seus rituais sejam precisos e suas traições, mortais.</p>
-        <p class="mb-4">Suplício – Grimório Oficial de Regras v4.0</p>
-        
-        <div id="secret-eye-trigger" class="eye-container" title="O Abismo retribui o olhar">
-            <div class="eye-iris" id="eye-iris">
-                <div class="eye-pupil"></div>
-            </div>
+        <div id="mobile-sidebar-overlay" class="fixed inset-0 sidebar-overlay z-50 hidden opacity-0 transition-opacity duration-300"></div>
+        <div id="mobile-sidebar" class="fixed top-0 right-0 h-full w-64 bg-bgCard border-l border-borderDim z-50 transform translate-x-full transition-transform duration-300 flex flex-col p-6 shadow-2xl">
+            <button id="close-sidebar-btn" class="self-end text-textMain hover:text-white mb-8 p-2 focus:outline-none">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <nav class="flex flex-col gap-6 text-lg font-cinzel font-bold tracking-widest">
+                <a href="#recursos" class="mobile-link text-textMain hover:text-accentGold transition-colors border-b border-borderDim pb-2">RECURSOS</a>
+                <a href="#cartas" class="mobile-link text-textMain hover:text-accentGold transition-colors border-b border-borderDim pb-2">CARTAS</a>
+                <a href="#fases" class="mobile-link text-textMain hover:text-accentGold transition-colors border-b border-borderDim pb-2">O TURNO</a>
+                <a href="#regras" class="mobile-link text-textMain hover:text-accentGold transition-colors border-b border-borderDim pb-2">RITOS</a>
+            </nav>
         </div>
-        <p class="mt-2 text-xs opacity-40">Não olhe muito tempo...</p>
-    </footer>
 
-    <!-- MODAL PRINCIPAL DO GLOSSÁRIO -->
+        <main class="pt-28 pb-24 overflow-hidden relative z-10">
+            <header class="max-w-4xl mx-auto px-4 text-center py-20 relative reveal">
+                <div class="inline-block mb-6 p-4 rounded-full bg-bgCard border border-borderDim shadow-card hover:scale-110 transition-transform cursor-pointer" onclick="triggerBlood()">
+                    <svg class="w-12 h-12 text-accentBlood drop-shadow-[0_0_8px_rgba(230,57,70,0.8)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2L2 22h20L12 2zm0 6l6 12H6l6-12z" stroke-linejoin="round"/>
+                        <circle cx="12" cy="15" r="2" fill="currentColor"/>
+                    </svg>
+                </div>
+                
+                <h1 id="main-title" class="font-cinzel text-5xl md:text-7xl lg:text-8xl font-black text-textBright mb-6 uppercase tracking-widest drop-shadow-2xl cursor-pointer select-none transition-colors">
+                    Suplício
+                </h1>
+                <p class="font-cinzel text-xl md:text-2xl text-accentGold tracking-[0.2em] mb-12">O Grimório de Regras Oficial</p>
+                
+                <div class="bg-bgCard/90 border border-borderDim rounded-2xl p-8 backdrop-blur-sm shadow-card max-w-3xl mx-auto text-left relative overflow-hidden group hover:border-accentGold transition-colors duration-500">
+                    <div class="absolute -top-20 -right-20 w-40 h-40 bg-accentGold/5 rounded-full blur-3xl group-hover:bg-accentGold/15 transition-all"></div>
+                    
+                    <h3 class="font-cinzel text-2xl text-textBright mb-4 flex items-center gap-2">
+                        <span class="text-accentBlood">◆</span> O Chamado
+                    </h3>
+                    <p class="mb-4 text-textMain leading-relaxed">Bem-vindo, Arcanista. Você lidera um culto secreto em busca da dominação mundial através de magia proibida e horrores indescritíveis. <span class="lore-secret" data-secret="Muitos enlouqueceram aqui.">Sua jornada será longa.</span></p>
+                    <p class="leading-relaxed">Sua missão é solitária e cruel: reduza a <span class="term" data-term="essencia">Essência</span> de seus oponentes a zero. Não há tabuleiro, apenas o seu grimório de 40 cartas e a sua astúcia.</p>
+                </div>
+            </header>
+
+            <section id="recursos" class="max-w-6xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
+                <div class="text-center mb-16">
+                    <h2 class="font-cinzel text-4xl text-textBright mb-4">As Forças do Oculto</h2>
+                    <div class="h-1 w-24 bg-accentBlood mx-auto rounded-full"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim rounded-2xl p-8 shadow-card hover:border-accentEssence hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-100" onclick="openModal('essencia')">
+                        <div class="w-20 h-20 rounded-full bg-accentEssence/5 border border-accentEssence/20 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform shadow-glow-essence">🤍</div>
+                        <h3 class="font-cinzel font-bold text-2xl text-white mb-2">Essência</h3>
+                        <div class="text-4xl font-black text-textBright mb-4">30 <span class="text-base font-normal text-textMain">Max</span></div>
+                        <p class="text-textBright text-sm flex-grow">Sua força vital. Se chegar a zero, seu culto é banido para sempre e você é eliminado.</p>
+                        <button class="mt-6 text-xs text-white uppercase tracking-wider font-bold border border-white/30 px-4 py-2 rounded-full group-hover:bg-white group-hover:text-bgBase transition-colors">Decifrar</button>
+                    </div>
+
+                    <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim rounded-2xl p-8 shadow-card hover:border-accentSoul hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-200" onclick="openModal('alma')">
+                        <div class="w-20 h-20 rounded-full bg-accentSoul/10 border border-accentSoul/30 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform shadow-glow-soul">🌌</div>
+                        <h3 class="font-cinzel font-bold text-2xl text-accentSoul mb-2">Alma</h3>
+                        <div class="flex items-baseline justify-center gap-2 mb-4">
+                            <span class="text-4xl font-black text-textBright">6</span>
+                            <span class="text-accentSoul font-bold">+4/turno</span>
+                        </div>
+                        <p class="text-textBright text-sm flex-grow">A mana cósmica usada para conjurar feitiços e invocar abominações. (Máx 12).</p>
+                        <button class="mt-6 text-xs text-accentSoul uppercase tracking-wider font-bold border border-accentSoul/30 px-4 py-2 rounded-full group-hover:bg-accentSoul group-hover:text-bgBase transition-colors">Decifrar</button>
+                    </div>
+
+                    <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim rounded-2xl p-8 shadow-card hover:border-accentBlood hover:-translate-y-2 transition-all duration-300 cursor-pointer group flex flex-col items-center text-center reveal delay-300" onclick="openModal('sofrimento')">
+                        <div class="w-20 h-20 rounded-full bg-accentBlood/10 border border-accentBlood/30 flex items-center justify-center text-4xl mb-6 group-hover:scale-110 group-hover:rotate-12 transition-transform shadow-glow-blood">🩸</div>
+                        <h3 class="font-cinzel font-bold text-2xl text-accentBlood mb-2">Sofrimento</h3>
+                        <div class="text-4xl font-black text-textBright mb-4">0 <span class="text-base font-normal text-textBright">Marcas</span></div>
+                        <p class="text-textBright text-sm flex-grow">Gerado pela dor. Paga magias ocultas, mas <span class="lore-secret" data-secret="A dor cobra seu preço.">pune o corpo</span> se passar de 8.</p>
+                        <button class="mt-6 text-xs text-accentBlood uppercase tracking-wider font-bold border border-accentBlood/30 px-4 py-2 rounded-full group-hover:bg-accentBlood group-hover:text-bgBase transition-colors">Decifrar</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="cartas" class="max-w-6xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
+                <div class="text-center mb-12">
+                    <h2 class="font-cinzel text-4xl text-textBright mb-4">O Arsenal Arcano</h2>
+                    <p class="text-textMain max-w-2xl mx-auto">Seu deck é composto por exatas 40 cartas. Explore os tomos abaixo.</p>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+                    <button class="tab-btn active px-6 py-3 font-cinzel font-bold text-sm border border-borderDim rounded-t-lg bg-bgCard/90 text-textBright border-b-0 hover:bg-bgCardHover" data-target="tab-mestre">Mestre do Culto</button>
+                    <button class="tab-btn px-6 py-3 font-cinzel font-bold text-sm border border-borderDim rounded-t-lg bg-bgBase/90 text-textMain hover:bg-bgCardHover" data-target="tab-criaturas">Criaturas</button>
+                    <button class="tab-btn px-6 py-3 font-cinzel font-bold text-sm border border-borderDim rounded-t-lg bg-bgBase/90 text-textMain hover:bg-bgCardHover" data-target="tab-rituais">Rituais & Magias</button>
+                </div>
+
+                <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim rounded-b-xl rounded-tr-xl p-6 md:p-10 shadow-card min-h-[400px]">
+                    
+                    <div id="tab-mestre" class="tab-content active">
+                        <div class="grid md:grid-cols-2 gap-10 items-center">
+                            <div>
+                                <h3 class="font-cinzel text-3xl text-accentGold mb-4 flex items-center gap-3">
+                                    <span class="bg-accentGold/20 p-2 rounded text-xl shadow-glow-gold">👑</span> O Avatar da Vontade
+                                </h3>
+                                <p class="mb-6 leading-relaxed">Carta obrigatória e líder. Fica visível fora do deck desde o início e possui 3 habilidades:</p>
+                                <ul class="space-y-4 mb-6">
+                                    <li class="bg-bgBase/90 p-4 rounded border-l-4 border-accentGold shadow-sm hover:translate-x-1 transition-transform">
+                                        <div class="mb-1"><span class="term cursor-help text-lg inline-block" data-term="passiva">Habilidade Passiva</span></div>
+                                        <p class="text-sm text-textMain">Sempre ativa, mesmo fora de campo.</p>
+                                    </li>
+                                    <li class="bg-bgBase/90 p-4 rounded border-l-4 border-accentBlood shadow-sm hover:translate-x-1 transition-transform">
+                                        <div class="mb-1"><span class="term cursor-help text-lg inline-block" data-term="ativa">Habilidade Ativa</span></div>
+                                        <p class="text-sm text-textMain">Requer estar em campo e pagar custo em Alma.</p>
+                                    </li>
+                                    <li class="bg-bgBase/90 p-4 rounded border-l-4 border-accentSoul shadow-sm hover:translate-x-1 transition-transform">
+                                        <div class="mb-1"><span class="term cursor-help text-lg inline-block" data-term="gatilho">Habilidade de Gatilho</span></div>
+                                        <p class="text-sm text-textMain">Reação automática do universo a eventos da batalha.</p>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="flex justify-center tilt-card-container">
+                                <div id="kaelen-card" class="tilt-card w-64 h-96 bg-bgCardDark border-2 border-accentGold rounded-lg p-3 relative shadow-glow-gold cursor-pointer select-none">
+                                    <div class="absolute top-2 right-2 bg-bgBase rounded-full w-8 h-8 flex items-center justify-center border border-accentGold text-accentGold font-bold z-10">5</div>
+                                    <div class="h-40 bg-gradient-to-br from-[#4a1c1c] via-[#2a1010] to-bgCardDark rounded border border-borderDim mb-2 overflow-hidden relative flex items-center justify-center">
+                                        <svg class="w-20 h-20 text-accentGold/20 absolute" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 22h20L12 2z"/></svg>
+                                        <span class="text-accentGold/40 font-cinzel text-4xl">K</span>
+                                    </div>
+                                    <h4 class="font-cinzel font-bold text-center text-textBright text-lg mb-1 border-b border-borderDim pb-1">Kaelen, o Profano</h4>
+                                    <p class="text-xs text-center text-textMuted italic mb-2">Humano Cultista</p>
+                                    <div class="text-[10px] space-y-2 leading-tight text-textMain">
+                                        <p><strong class="text-accentGold">Passiva:</strong> Rituais custam -1 Alma.</p>
+                                        <p><strong class="text-accentBlood">Ativa (2):</strong> Destrói criatura c/ DEF ≤ 3.</p>
+                                        <p><strong class="text-accentSoul">Gatilho:</strong> Ao conjurar ritual, ganhe 1 Sofrimento.</p>
+                                    </div>
+                                    <div class="absolute bottom-2 right-2 flex gap-1 font-bold z-10">
+                                        <span class="bg-accentBlood px-2 py-0.5 rounded text-white text-sm" title="Ataque">4</span>
+                                        <span class="bg-bgCard px-2 py-0.5 rounded text-white text-sm border border-borderDim" title="Defesa">5</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-criaturas" class="tab-content">
+                        <div class="max-w-3xl">
+                            <h3 class="font-cinzel text-3xl text-white mb-4">Os Servos do Abismo</h3>
+                            <p class="mb-6 leading-relaxed">Invoque criaturas pagando Alma. Elas viram para atacar e desviram na manutenção.</p>
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentBlood group" onclick="openModal('impeto')">
+                                    <h5 class="text-accentBlood font-bold mb-1 flex items-center gap-2 group-hover:scale-105 transition-transform">⚡ Ímpeto</h5>
+                                    <p class="text-sm text-textBright">Ataca no mesmo turno em que entra.</p>
+                                </div>
+                                <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-textBright group" onclick="openModal('furtividade')">
+                                    <h5 class="text-textBright font-bold mb-1 flex items-center gap-2 group-hover:scale-105 transition-transform">🗡️ Furtividade</h5>
+                                    <p class="text-sm text-textBright">Pague +1 Alma para não ser bloqueado.</p>
+                                </div>
+                                <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentSoul group" onclick="openModal('voar')">
+                                    <h5 class="text-accentSoul font-bold mb-1 flex items-center gap-2 group-hover:scale-105 transition-transform">🦇 Voar</h5>
+                                    <p class="text-sm text-textBright">Só pode ser bloqueada por quem voa.</p>
+                                </div>
+                                <div class="bg-bgBase border border-borderDim p-4 rounded cursor-pointer hover:border-accentGold group" onclick="openModal('vigilancia')">
+                                    <h5 class="text-accentGold font-bold mb-1 flex items-center gap-2 group-hover:scale-105 transition-transform">👁️ Vigilância</h5>
+                                    <p class="text-sm text-textBright">Não precisa virar para atacar.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-rituais" class="tab-content">
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="font-cinzel text-2xl text-accentGold mb-3">Rituais (Permanentes)</h3>
+                                <p class="text-sm mb-4">Ficam em campo alterando as regras.</p>
+                                <div class="bg-accentGold/10 border border-accentGold/30 p-4 rounded-lg">
+                                    <h4 class="text-accentGold font-bold mb-2">⚠️ A Regra de 1 Ritual</h4>
+                                    <p class="text-sm text-textBright">Devido ao estresse mental, você <strong>só pode conjurar 1 Ritual por turno</strong>.</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-cinzel text-2xl text-accentSoul mb-3">Sortilégios (Únicos)</h3>
+                                <p class="text-sm mb-4">Feitiços de uso único que vão ao cemitério.</p>
+                                <div class="bg-bgBase border border-borderDim p-4 rounded-lg">
+                                    <h4 class="text-accentBlood font-bold mb-2 flex items-center gap-2">
+                                        Sortilégio de REAÇÃO <span class="bg-accentBlood text-white text-xs px-2 rounded animate-pulse">!</span>
+                                    </h4>
+                                    <p class="text-sm text-textBright">Pode ser usado no turno do oponente! A pilha resolve de trás pra frente.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="fases" class="max-w-4xl mx-auto px-4 mb-32 scroll-mt-32 reveal">
+                <div class="text-center mb-16">
+                    <h2 class="font-cinzel text-4xl text-textBright mb-4">O Ciclo do Caos</h2>
+                    <p class="text-textMain">A anatomia de um turno. A ordem é absoluta.</p>
+                </div>
+
+                <div class="relative py-4">
+                    <div class="relative pl-16 pb-12 group cursor-default">
+                        <div class="timeline-line"></div>
+                        <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 shadow-glow-gold transition-transform group-hover:scale-125">I</div>
+                        <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim p-6 rounded-xl shadow-card transition-colors group-hover:border-accentGold">
+                            <h3 class="font-cinzel text-2xl text-white mb-2">Fase de Manutenção</h3>
+                            <p class="text-textBright text-sm">Desvire cartas, ganhe +4 Alma e resolva gatilhos iniciais.</p>
+                        </div>
+                    </div>
+
+                    <div class="relative pl-16 pb-12 group cursor-default">
+                        <div class="timeline-line"></div>
+                        <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 shadow-glow-gold transition-transform group-hover:scale-125">II</div>
+                        <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim p-6 rounded-xl shadow-card transition-colors group-hover:border-accentGold">
+                            <h3 class="font-cinzel text-2xl text-white mb-2">Fase Principal</h3>
+                            <p class="text-textBright text-sm">Invoque criaturas, magias, 1 ritual, ative habilidades em qualquer ordem.</p>
+                        </div>
+                    </div>
+
+                    <div class="relative pl-16 pb-12 group cursor-default">
+                        <div class="timeline-line"></div>
+                        <div class="absolute left-2 top-0 w-10 h-10 bg-accentBlood border-2 border-accentBlood rounded-full flex items-center justify-center font-cinzel font-bold text-white z-10 shadow-glow-blood animate-pulse transition-transform group-hover:scale-125">III</div>
+                        <div class="bg-gradient-to-r from-[#2a0808]/90 to-bgCard/90 backdrop-blur-sm border border-accentBlood/40 p-6 rounded-xl shadow-card transition-colors group-hover:border-accentBlood">
+                            <h3 class="font-cinzel text-2xl text-accentBlood mb-4 flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>
+                                Fase de Combate
+                            </h3>
+                            <ol class="list-decimal list-inside space-y-2 text-textMain mb-4">
+                                <li><strong class="text-white">Ataque:</strong> Declare e vire atacantes.</li>
+                                <li><strong class="text-white">Defesa:</strong> Oponente escolhe os bloqueios.</li>
+                                <li><strong class="text-white">Dano:</strong> Todo dano é resolvido simultaneamente.</li>
+                            </ol>
+                            <div class="p-3 bg-bgBase/90 border-l-2 border-accentGold text-sm rounded shadow-inner">
+                                <strong class="text-accentGold block mb-1">A Regra de Ouro:</strong> 
+                                Dano direto na Essência gera <span class="term inline-block" data-term="sofrimento">Sofrimento</span>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative pl-16 group cursor-default">
+                        <div class="absolute left-2 top-0 w-10 h-10 bg-bgBase border-2 border-accentGold rounded-full flex items-center justify-center font-cinzel font-bold text-accentGold z-10 shadow-glow-gold transition-transform group-hover:scale-125">IV</div>
+                        <div class="bg-bgCard/90 backdrop-blur-sm border border-borderDim p-6 rounded-xl shadow-card transition-colors group-hover:border-accentGold">
+                            <h3 class="font-cinzel text-2xl text-white mb-2">Fase Final</h3>
+                            <p class="text-textBright text-sm">Gatilhos finais, descarte para ter 7 cartas na mão. <span class="text-accentBlood font-bold">Verifique se o Sofrimento passou de 8!</span></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="regras" class="max-w-4xl mx-auto px-4 mb-20 reveal">
+                <h2 class="font-cinzel text-3xl text-textBright border-b border-borderDim pb-4 mb-8">Ritos de Passagem</h2>
+                <div class="bg-bgCard/90 border border-borderDim p-6 rounded-xl shadow-card">
+                    <p class="mb-4">As regras de deckbuilding são o cerne de um culto poderoso:</p>
+                    <ul class="list-disc list-inside space-y-2 mb-4 text-textBright">
+                        <li>39 cartas + 1 Mestre do Culto (40 total).</li>
+                        <li>Máximo de 3 cópias da mesma carta comum.</li>
+                        <li>Lendárias marcadas com [L] são únicas.</li>
+                    </ul>
+                    <p class="text-sm text-textMuted italic">O verdadeiro vencedor de Suplício é aquele que forja o melhor deck e controla a dor do sofrimento.</p>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Rodapé e Olho -->
+        <footer class="border-t border-borderDim bg-bgBase/90 py-12 text-center text-sm text-textMain/60 relative z-10">
+            <p class="font-cinzel text-accentGold text-lg mb-2">Que seus rituais sejam precisos e suas traições, mortais.</p>
+            <p class="mb-4">Suplício – Grimório Oficial de Regras v3.0</p>
+            
+            <div id="secret-eye-trigger" class="eye-container" title="O Abismo retribui o olhar">
+                <div class="eye-iris" id="eye-iris">
+                    <div class="eye-pupil"></div>
+                </div>
+            </div>
+            <p class="mt-2 text-xs opacity-40">Não olhe muito tempo...</p>
+        </footer>
+    </div>
+
     <div id="glossary-modal" class="fixed inset-0 bg-bgBase/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300" aria-modal="true" role="dialog">
         <div class="bg-bgCard border border-accentGold max-w-lg w-full rounded-2xl shadow-glow-gold overflow-hidden transform scale-95 transition-all duration-300 relative" id="modal-content-box">
             <div class="relative p-6 md:p-8 z-10 bg-bgCard/80 backdrop-blur-sm">
@@ -502,13 +583,12 @@
                     COMPREENDIDO
                 </button>
             </div>
-            <!-- Brilho interno do modal dinâmico -->
             <div id="modal-glow-bg" class="absolute inset-0 bg-gradient-to-br from-transparent to-transparent z-0 pointer-events-none transition-colors duration-500"></div>
         </div>
     </div>
 
     <script>
-        // GLOBAL STATE
+        // ESTADO GLOBAL
         let currentTheme = 'default'; 
         let globalMouseX = window.innerWidth / 2;
         let globalMouseY = window.innerHeight / 2;
@@ -552,7 +632,6 @@
         const modalExtraActions = document.getElementById('modal-extra-actions');
         const modalGlowBg = document.getElementById('modal-glow-bg');
 
-        // FUNÇÕES DO MODAL
         function openModal(termKey) {
             currentModalTerm = termKey;
             const data = dictionary[termKey];
@@ -562,7 +641,7 @@
             document.getElementById('modal-desc').innerHTML = data.desc;
             document.getElementById('modal-icon').innerHTML = data.icon;
             
-            // Set dynamic modal glow based on category
+            // Background Glow Dinâmico
             modalGlowBg.className = 'absolute inset-0 z-0 pointer-events-none transition-colors duration-500 bg-gradient-to-br';
             if (data.themeColor === 'red') modalGlowBg.classList.add('from-transparent', 'to-accentBlood/10');
             else if (data.themeColor === 'cyan') modalGlowBg.classList.add('from-transparent', 'to-accentSoul/10');
@@ -572,7 +651,7 @@
             modalExtraActions.innerHTML = '';
             modalExtraActions.classList.add('hidden');
             
-            // Renderiza botão dinâmico dependendo do Easter Egg
+            // Botões de Interação Especial
             if (data.hasSacrificeBtn) {
                 modalExtraActions.classList.remove('hidden');
                 modalExtraActions.innerHTML = `
@@ -604,11 +683,10 @@
         }
 
         function closeModal() {
-            // Resets para rejogabilidade infinita!
+            // Resets para rejogabilidade
             if (currentModalTerm === 'sofrimento') { totalSacrifices = 0; }
             if (currentModalTerm === 'essencia') { essenceCount = 30; }
             if (currentModalTerm === 'alma') { soulCount = 0; }
-            
             currentModalTerm = null;
 
             modal.classList.add('opacity-0');
@@ -622,7 +700,6 @@
         modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
         document.addEventListener('keydown', (e) => { if (e.key === "Escape" && !modal.classList.contains('hidden')) closeModal(); });
 
-        // AÇÕES DOS EASTER EGGS
         function performSacrifice(event, btnElement) {
             if (event) event.stopPropagation();
             if (totalSacrifices >= 9) return;
@@ -646,24 +723,74 @@
             btnElement.querySelector('span:nth-child(2)').innerText = `${essenceCount} Restantes`;
 
             if(essenceCount === 0) {
-                document.getElementById('modal-desc').innerHTML += "<br><br><span class='text-white font-bold italic'>A vida se esvai... Uma torrente arcana explode de dentro de você!</span>";
-                changeTheme('essence');
-                closeModal(); // Fica mais legal fechar o modal para ver a explosão arcana!
+                triggerDefeatSequence();
             }
         }
+
+        function triggerDefeatSequence() {
+            closeModal();
+            const flash = document.getElementById('flashbang');
+            const defeatContainer = document.getElementById('defeat-container');
+            const defeatText = document.getElementById('defeat-text');
+            const gameUI = document.querySelectorAll('nav, main, footer'); // Elementos base do site
+
+            // Clarão Branco Cega o Utilizador
+            flash.classList.remove('hidden');
+            void flash.offsetWidth;
+            flash.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                // Esconde a interface limpa
+                gameUI.forEach(el => el.style.display = 'none');
+                
+                // Explode as partículas Arcanas Brancas
+                changeTheme('essence');
+                
+                // Mostra a tela Preta (transparente a 60% para ver as partículas)
+                defeatContainer.classList.remove('hidden');
+                defeatContainer.classList.add('flex');
+                
+                // Remove o clarão
+                flash.classList.remove('opacity-100');
+                flash.classList.add('opacity-0');
+                
+                // Dispara a animação do texto
+                setTimeout(() => { 
+                    defeatText.classList.add('defeat-text-anim'); 
+                }, 1000);
+
+                setTimeout(() => { flash.classList.add('hidden'); }, 1000);
+            }, 1000);
+        }
+
+        // Ressurreição (Clique na tela de derrota)
+        document.getElementById('defeat-container').addEventListener('click', () => {
+            const defeatContainer = document.getElementById('defeat-container');
+            const defeatText = document.getElementById('defeat-text');
+            const gameUI = document.querySelectorAll('nav, main, footer');
+            
+            defeatContainer.classList.add('hidden');
+            defeatContainer.classList.remove('flex');
+            defeatText.classList.remove('defeat-text-anim');
+            
+            // Restaura o site normal
+            gameUI.forEach(el => el.style.display = '');
+            changeTheme('default');
+            essenceCount = 30; // Reset
+        });
 
         function performSoulChannel(event, btnElement) {
             if (event) event.stopPropagation();
             if (soulCount >= 12) return;
 
-            triggerScreenEffect('essence-vignette', 'draining', false); // Efeito visual rápido
+            triggerScreenEffect('essence-vignette', 'draining', false);
             soulCount++;
             btnElement.querySelector('span:nth-child(2)').innerText = `${soulCount} / 12`;
 
             if(soulCount === 12) {
-                document.getElementById('modal-desc').innerHTML += "<br><br><span class='text-accentSoul font-bold italic'>As almas convergem. Um portal para a espiral eterna se abre no tecido da realidade!</span>";
+                document.getElementById('modal-desc').innerHTML += "<br><br><span class='text-accentSoul font-bold italic'>As almas convergem. Um portal para a espiral eterna rasga o tecido da realidade!</span>";
                 changeTheme('soul');
-                setTimeout(() => closeModal(), 1500); // Fecha após um breve momento
+                setTimeout(() => closeModal(), 1500);
             }
         }
 
@@ -677,7 +804,6 @@
             setTimeout(() => { vignette.classList.remove(className); }, 400);
         }
 
-        // SIDEBAR MOBILE
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const mobileSidebar = document.getElementById('mobile-sidebar');
         const mobileSidebarOverlay = document.getElementById('mobile-sidebar-overlay');
@@ -709,7 +835,6 @@
         mobileSidebarOverlay.addEventListener('click', toggleSidebar);
         mobileLinks.forEach(link => link.addEventListener('click', toggleSidebar));
 
-        // EVENTOS GERAIS
         let titleClicks = 0;
         document.getElementById('main-title').addEventListener('click', function() {
             titleClicks++;
@@ -779,10 +904,6 @@
         }, { threshold: 0.1 });
         document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
-
-        /* ------------------------------------------------------------------
-           MOUSE TRACKING (Global) & OLHO DO RODAPÉ
-        ------------------------------------------------------------------ */
         const eyeContainer = document.getElementById('secret-eye-trigger');
         const iris = document.getElementById('eye-iris');
 
@@ -810,10 +931,6 @@
             }
         });
 
-
-        /* ------------------------------------------------------------------
-           SISTEMA DE PARTÍCULAS E CENÁRIOS INTERATIVOS NO CANVAS
-        ------------------------------------------------------------------ */
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -859,69 +976,53 @@
             }
         }
 
-        // Partículas Fogos Fátuos (Olho)
-        class WispParticle {
-            constructor() {
-                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 3 + 1; this.baseX = this.x;
-                this.speedY = Math.random() * -1 - 0.5; this.angle = Math.random() * Math.PI * 2;
-                this.angleSpeed = Math.random() * 0.05 + 0.01; this.opacity = Math.random() * 0.6 + 0.2;
-                this.glow = `rgba(69, 162, 158, ${this.opacity})`;
-            }
-            update() {
-                this.y += this.speedY; this.angle += this.angleSpeed;
-                this.x = this.baseX + Math.sin(this.angle) * 20; 
-                if (this.y < -50) { this.y = canvas.height + 50; this.baseX = Math.random() * canvas.width; }
-            }
-            draw(ctx) {
-                ctx.shadowBlur = 10; ctx.shadowColor = this.glow; ctx.fillStyle = this.glow;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-                ctx.shadowBlur = 0; 
-            }
+        // Explosão de Essência (Feixes Violentos Brancos)
+        class EssenceShard {
+             constructor() {
+                 this.x = canvas.width/2; this.y = canvas.height/2;
+                 this.angle = Math.random() * Math.PI*2;
+                 this.speed = Math.random() * 30 + 10;
+                 this.length = Math.random() * 120 + 20;
+                 this.thickness = Math.random() * 4 + 1;
+                 this.opacity = 1;
+             }
+             update() {
+                 this.x += Math.cos(this.angle) * this.speed;
+                 this.y += Math.sin(this.angle) * this.speed;
+                 this.opacity -= 0.02; // Desvanece rápido
+                 if(this.opacity <= 0 || this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                     this.x = canvas.width/2; this.y = canvas.height/2;
+                     this.opacity = 1;
+                     this.angle = Math.random() * Math.PI*2;
+                     this.speed = Math.random() * 30 + 10;
+                 }
+             }
+             draw(ctx) {
+                 ctx.save();
+                 ctx.translate(this.x, this.y);
+                 ctx.rotate(this.angle);
+                 ctx.fillStyle = `rgba(248, 249, 250, ${this.opacity})`;
+                 ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(248, 249, 250, 0.8)';
+                 ctx.beginPath();
+                 ctx.moveTo(0, -this.thickness/2);
+                 ctx.lineTo(this.length, 0);
+                 ctx.lineTo(0, this.thickness/2);
+                 ctx.fill();
+                 ctx.restore();
+             }
         }
 
-        // Explosão de Essência (Centro para fora velozmente)
-        class EssenceParticle {
-            constructor() {
-                this.x = canvas.width / 2;
-                this.y = canvas.height / 2;
-                const angle = Math.random() * Math.PI * 2;
-                const velocity = Math.random() * 25 + 5; 
-                this.vx = Math.cos(angle) * velocity;
-                this.vy = Math.sin(angle) * velocity;
-                this.size = Math.random() * 4 + 1;
-                this.opacity = 1;
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                this.opacity -= 0.015; // Desaparece rápido
-                this.size *= 0.95; // Encolhe
-                // Se morrer, renasce no centro
-                if (this.opacity <= 0) {
-                    this.x = canvas.width / 2; this.y = canvas.height / 2;
-                    const angle = Math.random() * Math.PI * 2;
-                    const velocity = Math.random() * 20 + 5; 
-                    this.vx = Math.cos(angle) * velocity; this.vy = Math.sin(angle) * velocity;
-                    this.opacity = 1; this.size = Math.random() * 4 + 1;
-                }
-            }
-            draw(ctx) {
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-                ctx.shadowBlur = 15; ctx.shadowColor = '#ffffff';
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-        }
-
-        // Almas na Espiral do Portal
-        class SoulSpiralParticle {
+        // Almas Agonizantes (Rostos disformes na Espiral)
+        class SoulFaceParticle {
             constructor() {
                 this.angle = Math.random() * Math.PI * 2;
-                this.radius = Math.random() * 50 + 20; // Nasce perto do portal
-                this.speed = Math.random() * 3 + 1; // Velocidade de expansão
-                this.angleSpeed = 0.05 + Math.random() * 0.03; // Velocidade de rotação
-                this.size = Math.random() * 3 + 2;
-                this.opacity = Math.random() * 0.5 + 0.5;
+                this.radius = Math.random() * 50 + 20;
+                this.speed = Math.random() * 3 + 1;
+                this.angleSpeed = 0.05 + Math.random() * 0.03;
+                this.size = Math.random() * 10 + 8; // Rosto maior
+                this.opacity = Math.random() * 0.5 + 0.3;
+                // Variações para as distorções da cara
+                this.seed = Math.random() * 1000;
             }
             update() {
                 this.radius += this.speed;
@@ -929,16 +1030,51 @@
                 this.x = (canvas.width / 2) + Math.cos(this.angle) * this.radius;
                 this.y = (canvas.height / 2) + Math.sin(this.angle) * this.radius;
                 
-                // Se saiu da tela, volta pro centro do portal
                 if (this.x < -100 || this.x > canvas.width + 100 || this.y < -100 || this.y > canvas.height + 100) {
                     this.radius = 20; this.angle = Math.random() * Math.PI * 2;
                 }
             }
             draw(ctx) {
+                // Fazer a face olhar no sentido do movimento e para fora do portal
+                const faceAngle = Math.atan2(this.y - canvas.height/2, this.x - canvas.width/2);
+                
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(faceAngle + Math.PI/2); // Vira a cabeça
+                
+                const timeOscillation = Math.sin(Date.now() / 150 + this.seed) * 2; // Tremor
+
+                // Aura da Alma
+                ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(69, 162, 158, 0.8)';
                 ctx.fillStyle = `rgba(69, 162, 158, ${this.opacity})`;
-                ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(69, 162, 158, 1)';
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
+                
+                // Corpo Fantasma
+                ctx.beginPath();
+                ctx.moveTo(0, -this.size);
+                ctx.bezierCurveTo(this.size + timeOscillation, -this.size, this.size, this.size, 0, this.size * 2 + timeOscillation);
+                ctx.bezierCurveTo(-this.size, this.size, -this.size + timeOscillation, -this.size, 0, -this.size);
+                ctx.fill();
+
+                // Rosto Assustador
                 ctx.shadowBlur = 0;
+                ctx.fillStyle = `rgba(0, 0, 0, ${this.opacity * 0.9})`;
+                
+                // Olho Esquerdo (Disforme)
+                ctx.beginPath();
+                ctx.ellipse(-this.size*0.35, -this.size*0.2, this.size*0.25, this.size*0.3 + timeOscillation/2, 0.2, 0, Math.PI*2);
+                ctx.fill();
+                
+                // Olho Direito
+                ctx.beginPath();
+                ctx.ellipse(this.size*0.35, -this.size*0.1, this.size*0.15, this.size*0.25, -0.2, 0, Math.PI*2);
+                ctx.fill();
+
+                // Maxilar rasgado (Boca Aberta Longa)
+                ctx.beginPath();
+                ctx.ellipse(0, this.size*1.2, this.size*0.3, this.size*0.8 + Math.abs(timeOscillation), 0, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.restore();
             }
         }
 
@@ -950,23 +1086,18 @@
             
             const pCount = Math.floor(window.innerWidth / 15);
             
-            // Ativa o body class e gera partículas específicas
             if (themeName === 'blood') {
                 document.body.classList.add('theme-blood');
                 for (let i = 0; i < pCount * 2.5; i++) particles.push(new BloodParticle());
             } else if (themeName === 'eye') {
                 document.body.classList.add('theme-eye');
-                for (let i = 0; i < pCount / 1.5; i++) particles.push(new WispParticle());
             } else if (themeName === 'essence') {
                 document.body.classList.add('theme-essence');
-                // Adiciona um sacudão rápido na tela para o impacto
-                document.body.classList.add('shake-screen');
-                setTimeout(() => document.body.classList.remove('shake-screen'), 500);
-                for (let i = 0; i < pCount * 2; i++) particles.push(new EssenceParticle());
+                for (let i = 0; i < pCount * 1.5; i++) particles.push(new EssenceShard()); // Estilhaços mortais
             } else if (themeName === 'soul') {
                 document.body.classList.add('theme-soul');
-                for (let i = 0; i < pCount * 3; i++) particles.push(new SoulSpiralParticle());
-            } else { // default
+                for (let i = 0; i < pCount * 1.5; i++) particles.push(new SoulFaceParticle()); // Rostos agonizantes
+            } else { 
                 for (let i = 0; i < pCount; i++) particles.push(new FireParticle());
             }
         }
@@ -1068,16 +1199,13 @@
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Fundos estáticos específicos por tema (Olho gigante ou Portal)
             if(currentTheme === 'eye') GiantEye.draw(ctx, canvas.width, canvas.height);
             if(currentTheme === 'soul') drawSoulPortal(ctx, canvas.width, canvas.height);
 
-            // Partículas
             particles.forEach(p => { p.update(); p.draw(ctx); });
             requestAnimationFrame(animateParticles);
         }
 
-        // Init
         changeTheme('default');
         animateParticles();
 
